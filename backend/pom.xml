@@ -48,6 +48,13 @@
             <scope>runtime</scope>
         </dependency>
 
+        <!-- Swagger / OpenAPI - ftiaxnei automati tekmiriosi tou REST API -->
+        <dependency>
+            <groupId>org.springdoc</groupId>
+            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+            <version>2.8.17</version>
+        </dependency>
+
         <!-- Gia unit tests -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
