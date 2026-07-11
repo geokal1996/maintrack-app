@@ -34,6 +34,20 @@
             <artifactId>spring-boot-starter-validation</artifactId>
         </dependency>
 
+        <!-- Gia na milaei to Java me ti vasi dedomenon (JPA / Hibernate) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
+        </dependency>
+
+        <!-- O odigos (driver) gia na sindeetai to Java me tin SQL Server -->
+        <dependency>
+            <groupId>com.microsoft.sqlserver</groupId>
+            <artifactId>mssql-jdbc</artifactId>
+            <version>13.4.0.jre11</version>
+            <scope>runtime</scope>
+        </dependency>
+
         <!-- Gia unit tests -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
