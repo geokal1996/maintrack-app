@@ -1,0 +1,3 @@
+# Ta bash scripts (.sh) prepei PANTA na exoun LF alagi grammis (oxi CRLF ton Windows),
+# giati trexoun mesa se Linux containers (Docker) kai to bash den katalavainei CRLF.
+*.sh text eol=lf
