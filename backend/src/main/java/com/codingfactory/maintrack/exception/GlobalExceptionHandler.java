@@ -1,5 +1,6 @@
 package com.codingfactory.maintrack.exception;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -52,5 +53,14 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiError> handleAccessDenied(AccessDeniedException ex) {
         ApiError error = new ApiError(HttpStatus.FORBIDDEN.value(), ex.getMessage());
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
+    }
+
+    // Otan i vasi apporiptei tin egrafi giati paravazei UNIQUE constraint
+    // (p.x. dio xristes me to idio username, i dio mihanes me ton idio kodiko) -> 409
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ApiError> handleDataIntegrityViolation(DataIntegrityViolationException ex) {
+        ApiError error = new ApiError(HttpStatus.CONFLICT.value(),
+                "Ta dedomena pou stalthikan paravazoun periorismo monadikotitas (p.x. to username i o kodikos yparxei idi)");
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
     }
 }

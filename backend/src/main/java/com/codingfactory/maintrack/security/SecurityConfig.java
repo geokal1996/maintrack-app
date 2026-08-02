@@ -27,10 +27,15 @@ public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final CustomUserDetailsService userDetailsService;
+    private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
+    private final JwtAccessDeniedHandler jwtAccessDeniedHandler;
 
-    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter, CustomUserDetailsService userDetailsService) {
+    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter, CustomUserDetailsService userDetailsService,
+                           JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint, JwtAccessDeniedHandler jwtAccessDeniedHandler) {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
         this.userDetailsService = userDetailsService;
+        this.jwtAuthenticationEntryPoint = jwtAuthenticationEntryPoint;
+        this.jwtAccessDeniedHandler = jwtAccessDeniedHandler;
     }
 
     // To BCrypt "anakateuei" ton kodiko me tetoio tropo pou den mporei na "diavastei" antistrofa.
@@ -77,6 +82,11 @@ public class SecurityConfig {
                 // "STATELESS" = o server DEN thymatai poios eisai anamesa se requests.
                 // Kathe request prepei na fernei to token tou - kalytero gia REST API.
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                // 401 otan DEN yparxei/den einai egkyro to token, 403 otan YPARXEI
+                // syndesi alla o rolos den ftanei gia ti sygkekrimeni energeia
+                .exceptionHandling(ex -> ex
+                        .authenticationEntryPoint(jwtAuthenticationEntryPoint)
+                        .accessDeniedHandler(jwtAccessDeniedHandler))
                 .authorizeHttpRequests(auth -> auth
                         // Auta ta endpoints ta blepei O KATHENAS, xoris login
                         .requestMatchers("/api/auth/**").permitAll()

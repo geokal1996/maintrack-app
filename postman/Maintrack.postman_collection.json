@@ -1,0 +1,637 @@
+{
+  "info": {
+    "name": "Maintrack API",
+    "description": "Postman collection gia to Maintrack (Sistima Katagrafis Vlavon & Syntirisis) - Coding Factory Final Project. Perilamvanei: login me 3 diaforetikous rolous (MANAGER/SUPERVISOR/TECHNICIAN), CRUD gia mihanes/vlaves/xristes, kai negative tests pou epivevaionoun oti oi periorismoi dikaiomaton doulevoun sosta.\n\nProapaitoumeno: to backend na trexei sto localhost:8080 kai to seed data na exei trexei toulaxiston mia fora (etsi yparxoun oi xristes admin/m.nikolaou/k.konstantinou).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8080" },
+    { "key": "managerToken", "value": "" },
+    { "key": "supervisorToken", "value": "" },
+    { "key": "technicianToken", "value": "" },
+    { "key": "technicianUserId", "value": "" },
+    { "key": "machineId", "value": "" },
+    { "key": "existingMachineId", "value": "" },
+    { "key": "faultId", "value": "" },
+    { "key": "userId", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "1. Auth",
+      "item": [
+        {
+          "name": "Login - MANAGER (admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+                  "const data = pm.response.json();",
+                  "pm.test('Epistrafike token', function () { pm.expect(data.token).to.be.a('string'); });",
+                  "pm.test('O rolos einai MANAGER', function () { pm.expect(data.role).to.eql('MANAGER'); });",
+                  "pm.collectionVariables.set('managerToken', data.token);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"Admin123!\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{baseUrl}}/api/auth/login", "host": ["{{baseUrl}}"], "path": ["api", "auth", "login"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Login - SUPERVISOR (m.nikolaou)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+                  "const data = pm.response.json();",
+                  "pm.test('O rolos einai SUPERVISOR', function () { pm.expect(data.role).to.eql('SUPERVISOR'); });",
+                  "pm.collectionVariables.set('supervisorToken', data.token);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"m.nikolaou\",\n  \"password\": \"Manager123!\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{baseUrl}}/api/auth/login", "host": ["{{baseUrl}}"], "path": ["api", "auth", "login"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Login - TECHNICIAN (k.konstantinou)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+                  "const data = pm.response.json();",
+                  "pm.test('O rolos einai TECHNICIAN', function () { pm.expect(data.role).to.eql('TECHNICIAN'); });",
+                  "pm.collectionVariables.set('technicianToken', data.token);",
+                  "pm.collectionVariables.set('technicianUserId', data.userId);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"k.konstantinou\",\n  \"password\": \"Tech123!\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{baseUrl}}/api/auth/login", "host": ["{{baseUrl}}"], "path": ["api", "auth", "login"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Login - Lathos kodikos (401 anamenomeno)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 401 - lathos stoixeia', function () { pm.response.to.have.status(401); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"LathosKodikos123\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{baseUrl}}/api/auth/login", "host": ["{{baseUrl}}"], "path": ["api", "auth", "login"] }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "2. Machines",
+      "item": [
+        {
+          "name": "Lista mihanon (GET)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+                  "const data = pm.response.json();",
+                  "if (data.length > 0) { pm.collectionVariables.set('existingMachineId', data[0].id); }"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{managerToken}}" }],
+            "url": { "raw": "{{baseUrl}}/api/machines", "host": ["{{baseUrl}}"], "path": ["api", "machines"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Dimiourgia nias mihanis (POST) - SUPERVISOR",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201 - dimiourgithike', function () { pm.response.to.have.status(201); });",
+                  "const data = pm.response.json();",
+                  "pm.collectionVariables.set('machineId', data.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{supervisorToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"POSTMAN-TEST-1\",\n  \"name\": \"Dokimastiki Mihani (Postman)\",\n  \"area\": \"Test\",\n  \"status\": \"OPERATIONAL\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{baseUrl}}/api/machines", "host": ["{{baseUrl}}"], "path": ["api", "machines"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Enimerosi mihanis (PUT) - SUPERVISOR",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{supervisorToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"POSTMAN-TEST-1\",\n  \"name\": \"Dokimastiki Mihani (enimeromeni)\",\n  \"area\": \"Test\",\n  \"status\": \"UNDER_MAINTENANCE\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{baseUrl}}/api/machines/{{machineId}}", "host": ["{{baseUrl}}"], "path": ["api", "machines", "{{machineId}}"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Diagrafi mihanis (DELETE) - SUPERVISOR -> 403 (ANAMENOMENO)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 403 - o SUPERVISOR DEN mporei na diagrapsei mihani', function () { pm.response.to.have.status(403); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{supervisorToken}}" }],
+            "url": { "raw": "{{baseUrl}}/api/machines/{{machineId}}", "host": ["{{baseUrl}}"], "path": ["api", "machines", "{{machineId}}"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Diagrafi mihanis (DELETE) - MANAGER -> 204 (ANAMENOMENO)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 204 - o MANAGER MPOREI na diagrapsei mihani', function () { pm.response.to.have.status(204); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{managerToken}}" }],
+            "url": { "raw": "{{baseUrl}}/api/machines/{{machineId}}", "host": ["{{baseUrl}}"], "path": ["api", "machines", "{{machineId}}"] }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "3. Faults & Maintenance Actions",
+      "item": [
+        {
+          "name": "Lista olon ton vlavon (GET)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{managerToken}}" }],
+            "url": { "raw": "{{baseUrl}}/api/faults", "host": ["{{baseUrl}}"], "path": ["api", "faults"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Lista vlavon me filtro status=OPEN (GET)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{managerToken}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/faults?status=OPEN",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "faults"],
+              "query": [{ "key": "status", "value": "OPEN" }]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Dimiourgia nias vlavis (POST)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201 - i vlavi dimiourgithike', function () { pm.response.to.have.status(201); });",
+                  "const data = pm.response.json();",
+                  "pm.test('I katastasi einai OPEN', function () { pm.expect(data.status).to.eql('OPEN'); });",
+                  "pm.collectionVariables.set('faultId', data.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{technicianToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"machineId\": {{existingMachineId}},\n  \"reportedByUserId\": {{technicianUserId}},\n  \"title\": \"Dokimastiki vlavi (Postman)\",\n  \"description\": \"Auti i vlavi dimiourgithike gia dokimi tou API meso Postman.\",\n  \"severity\": \"MEDIUM\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{baseUrl}}/api/faults", "host": ["{{baseUrl}}"], "path": ["api", "faults"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Prosthiki energeias syntirisis (POST)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201 - i energeia katagrafike', function () { pm.response.to.have.status(201); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{technicianToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"technicianUserId\": {{technicianUserId}},\n  \"description\": \"Elenxos kai dokimi (Postman test)\",\n  \"downtimeMinutes\": 15\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{baseUrl}}/api/faults/{{faultId}}/actions", "host": ["{{baseUrl}}"], "path": ["api", "faults", "{{faultId}}", "actions"] }
+          },
+          "response": []
+        },
+        {
+          "name": "I vlavi egine IN_PROGRESS meta tin energeia (GET)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+                  "const data = pm.response.json();",
+                  "pm.test('I katastasi allaxe automata se IN_PROGRESS', function () { pm.expect(data.status).to.eql('IN_PROGRESS'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{technicianToken}}" }],
+            "url": { "raw": "{{baseUrl}}/api/faults/{{faultId}}", "host": ["{{baseUrl}}"], "path": ["api", "faults", "{{faultId}}"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Kleisimo vlavis pou DEN einai RESOLVED -> 409 (ANAMENOMENO)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 409 - i vlavi prepei na einai RESOLVED prin kleisei', function () { pm.response.to.have.status(409); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{technicianToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"CLOSED\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{baseUrl}}/api/faults/{{faultId}}/status", "host": ["{{baseUrl}}"], "path": ["api", "faults", "{{faultId}}", "status"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Allagi katastasis se RESOLVED (PATCH)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+                  "const data = pm.response.json();",
+                  "pm.test('I katastasi einai RESOLVED', function () { pm.expect(data.status).to.eql('RESOLVED'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{technicianToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"RESOLVED\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{baseUrl}}/api/faults/{{faultId}}/status", "host": ["{{baseUrl}}"], "path": ["api", "faults", "{{faultId}}", "status"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Kleisimo vlavis (PATCH status=CLOSED)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+                  "const data = pm.response.json();",
+                  "pm.test('I katastasi einai CLOSED', function () { pm.expect(data.status).to.eql('CLOSED'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{technicianToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"CLOSED\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{baseUrl}}/api/faults/{{faultId}}/status", "host": ["{{baseUrl}}"], "path": ["api", "faults", "{{faultId}}", "status"] }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "4. Users",
+      "item": [
+        {
+          "name": "Lista xriston (GET) - MANAGER",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+                  "const data = pm.response.json();",
+                  "if (data.length > 0) { pm.collectionVariables.set('userId', data[0].id); }"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{managerToken}}" }],
+            "url": { "raw": "{{baseUrl}}/api/users", "host": ["{{baseUrl}}"], "path": ["api", "users"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Lista xriston (GET) - TECHNICIAN -> 403 (ANAMENOMENO)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 403 - o TECHNICIAN den blepei ti lista xriston', function () { pm.response.to.have.status(403); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{technicianToken}}" }],
+            "url": { "raw": "{{baseUrl}}/api/users", "host": ["{{baseUrl}}"], "path": ["api", "users"] }
+          },
+          "response": []
+        },
+        {
+          "name": "SUPERVISOR ftiaxnei TECHNICIAN (POST) -> 201 (ANAMENOMENO)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201', function () { pm.response.to.have.status(201); });",
+                  "const data = pm.response.json();",
+                  "pm.collectionVariables.set('userId', data.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{supervisorToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"postman.tech\",\n  \"password\": \"Postman123!\",\n  \"fullName\": \"Postman Test Technician\",\n  \"role\": \"TECHNICIAN\",\n  \"jobTitle\": \"Dokimastikos Texnikos\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{baseUrl}}/api/users", "host": ["{{baseUrl}}"], "path": ["api", "users"] }
+          },
+          "response": []
+        },
+        {
+          "name": "SUPERVISOR prospathei na ftiaxei allon SUPERVISOR (POST) -> 403 (ANAMENOMENO)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 403 - o SUPERVISOR mporei na ftiaxei MONO TECHNICIAN', function () { pm.response.to.have.status(403); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{supervisorToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"postman.supervisor\",\n  \"password\": \"Postman123!\",\n  \"fullName\": \"Postman Test Supervisor\",\n  \"role\": \"SUPERVISOR\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{baseUrl}}/api/users", "host": ["{{baseUrl}}"], "path": ["api", "users"] }
+          },
+          "response": []
+        },
+        {
+          "name": "MANAGER ftiaxnei SUPERVISOR (POST) -> 201 (ANAMENOMENO)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201', function () { pm.response.to.have.status(201); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{managerToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"postman.supervisor2\",\n  \"password\": \"Postman123!\",\n  \"fullName\": \"Postman Test Supervisor 2\",\n  \"role\": \"SUPERVISOR\",\n  \"jobTitle\": \"Dokimastikos Proistamenos\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{baseUrl}}/api/users", "host": ["{{baseUrl}}"], "path": ["api", "users"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Apenergopoiisi xristi (PATCH active=false)",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Authorization", "value": "Bearer {{managerToken}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/users/{{userId}}/active?active=false",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "users", "{{userId}}", "active"],
+              "query": [{ "key": "active", "value": "false" }]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "5. Asfaleia / Negative Tests",
+      "item": [
+        {
+          "name": "GET /api/machines XORIS token -> 401 (ANAMENOMENO)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 401 - xreiazetai login', function () { pm.response.to.have.status(401); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/machines", "host": ["{{baseUrl}}"], "path": ["api", "machines"] }
+          },
+          "response": []
+        },
+        {
+          "name": "GET /api/health XORIS token -> 200 (dimosio endpoint)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200 - to health endpoint einai dimosio', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/health", "host": ["{{baseUrl}}"], "path": ["api", "health"] }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}
