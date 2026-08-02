@@ -1,11 +1,15 @@
 import { useEffect, useState } from "react";
+import { useAuth } from "../context/AuthContext";
 import { getUsers, createUser, setUserActive } from "../api/usersApi";
 
-const ROLES = ["TECHNICIAN", "SUPERVISOR"];
-
-const emptyForm = { username: "", password: "", fullName: "", role: "TECHNICIAN" };
+const emptyForm = { username: "", password: "", fullName: "", role: "TECHNICIAN", jobTitle: "" };
 
 export default function UsersPage() {
+  const { isManager } = useAuth();
+  // O SUPERVISOR mporei na ftiaxnei MONO TECHNICIAN. O MANAGER mporei TECHNICIAN i SUPERVISOR
+  // (oxi allon MANAGER - auto ginetai mono me to xeri stin vasi, gia asfaleia).
+  const availableRoles = isManager ? ["TECHNICIAN", "SUPERVISOR"] : ["TECHNICIAN"];
+
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -66,8 +70,16 @@ export default function UsersPage() {
             <div className="form-row">
               <label>Ρόλος</label>
               <select value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })}>
-                {ROLES.map((r) => <option key={r} value={r}>{r}</option>)}
+                {availableRoles.map((r) => <option key={r} value={r}>{r}</option>)}
               </select>
+            </div>
+            <div className="form-row">
+              <label>Τίτλος θέσης (προαιρετικό)</label>
+              <input
+                placeholder="π.χ. Ηλεκτρολόγος Συντήρησης"
+                value={form.jobTitle}
+                onChange={(e) => setForm({ ...form, jobTitle: e.target.value })}
+              />
             </div>
             {error && <p className="error-text">{error}</p>}
             <div className="form-actions">
@@ -87,6 +99,7 @@ export default function UsersPage() {
                 <th>Username</th>
                 <th>Ονοματεπώνυμο</th>
                 <th>Ρόλος</th>
+                <th>Τίτλος θέσης</th>
                 <th>Κατάσταση</th>
                 <th></th>
               </tr>
@@ -97,6 +110,7 @@ export default function UsersPage() {
                   <td>{u.username}</td>
                   <td>{u.fullName}</td>
                   <td>{u.role}</td>
+                  <td>{u.jobTitle || <span className="muted">—</span>}</td>
                   <td>{u.active ? "Ενεργός" : "Ανενεργός"}</td>
                   <td>
                     <button className="btn secondary" onClick={() => handleToggleActive(u)}>

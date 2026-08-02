@@ -4,7 +4,7 @@ import { useAuth } from "../context/AuthContext";
 // Auto einai to "periblima" pou emfanizetai se OLES tis selides meta to login:
 // panw i mpara plohgisis, kai apo katw to periexomeno tis kathe selidas (<Outlet />).
 export default function Layout() {
-  const { user, isSupervisor, logout } = useAuth();
+  const { user, canManageUsers, logout } = useAuth();
   const navigate = useNavigate();
 
   function handleLogout() {
@@ -20,7 +20,7 @@ export default function Layout() {
           <NavLink to="/" end>Dashboard</NavLink>
           <NavLink to="/machines">Μηχανές</NavLink>
           <NavLink to="/faults">Βλάβες</NavLink>
-          {isSupervisor && <NavLink to="/users">Χρήστες</NavLink>}
+          {canManageUsers && <NavLink to="/users">Χρήστες</NavLink>}
         </nav>
         <div className="user-info">
           <span>{user?.fullName} ({user?.role})</span>

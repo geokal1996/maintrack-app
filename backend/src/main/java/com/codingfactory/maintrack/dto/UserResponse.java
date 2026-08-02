@@ -12,6 +12,7 @@ public class UserResponse {
     private String fullName;
     private Role role;
     private boolean active;
+    private String jobTitle;
 
     public static UserResponse from(User user) {
         UserResponse dto = new UserResponse();
@@ -20,6 +21,7 @@ public class UserResponse {
         dto.fullName = user.getFullName();
         dto.role = user.getRole();
         dto.active = user.isActive();
+        dto.jobTitle = user.getJobTitle();
         return dto;
     }
 
@@ -41,5 +43,9 @@ public class UserResponse {
 
     public boolean isActive() {
         return active;
+    }
+
+    public String getJobTitle() {
+        return jobTitle;
     }
 }

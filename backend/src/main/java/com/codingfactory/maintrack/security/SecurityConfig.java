@@ -83,15 +83,17 @@ public class SecurityConfig {
                         .requestMatchers("/api/health").permitAll()
                         .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
 
-                        // Diagrafi/dimiourgia/allagi mihanon -> mono SUPERVISOR
+                        // Dimiourgia/allagi mihanon -> SUPERVISOR i MANAGER
                         // (PROSOXI: prepei na dosoume HttpMethod.POST, oxi to string "POST" -
                         // alliws to Spring Security to katalavainei san allo URL pattern, oxi san periorismo methodou)
-                        .requestMatchers(HttpMethod.POST, "/api/machines/**").hasRole("SUPERVISOR")
-                        .requestMatchers(HttpMethod.PUT, "/api/machines/**").hasRole("SUPERVISOR")
-                        .requestMatchers(HttpMethod.DELETE, "/api/machines/**").hasRole("SUPERVISOR")
+                        .requestMatchers(HttpMethod.POST, "/api/machines/**").hasAnyRole("SUPERVISOR", "MANAGER")
+                        .requestMatchers(HttpMethod.PUT, "/api/machines/**").hasAnyRole("SUPERVISOR", "MANAGER")
+                        // Diagrafi mihanis -> MONO MANAGER (pio "epikindini" energeia, pio psilo dikaioma)
+                        .requestMatchers(HttpMethod.DELETE, "/api/machines/**").hasRole("MANAGER")
 
-                        // Diaxeirisi xriston -> mono SUPERVISOR
-                        .requestMatchers("/api/users/**").hasRole("SUPERVISOR")
+                        // Diaxeirisi xriston -> SUPERVISOR i MANAGER (to POIOUS rolous mporei
+                        // na dimiourgisei o kathenas elenxetai pio analytika mesa sto UserService)
+                        .requestMatchers("/api/users/**").hasAnyRole("SUPERVISOR", "MANAGER")
 
                         // Ola ta alla (GET machines, faults, actions...) -> aploustata na eisai syndedemenos
                         .anyRequest().authenticated()

@@ -32,10 +32,22 @@ export function AuthProvider({ children }) {
     setUser(null);
   }
 
+  // 3 rooi tora: TECHNICIAN -> SUPERVISOR -> MANAGER (o MANAGER exei OLA ta dikaiomata
+  // tou SUPERVISOR, PLUS merika epipleon - p.x. diagrafi mihanis, dimiourgia SUPERVISOR-xriston).
+  const isManager = user?.role === "MANAGER";
+  const isSupervisor = user?.role === "SUPERVISOR";
+
   const value = {
     user,
     isAuthenticated: !!user,
-    isSupervisor: user?.role === "SUPERVISOR",
+    isManager,
+    isSupervisor,
+    // Dimiourgia/epexergasia mihanon -> SUPERVISOR i MANAGER
+    canManageMachines: isSupervisor || isManager,
+    // Diagrafi mihanis -> MONO MANAGER
+    canDeleteMachines: isManager,
+    // Selida "Xristes" (list + dimiourgia) -> SUPERVISOR i MANAGER
+    canManageUsers: isSupervisor || isManager,
     login,
     logout,
   };

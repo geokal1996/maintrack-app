@@ -29,6 +29,11 @@ public class User {
     @Column(nullable = false)
     private boolean active = true;
 
+    // Proaiaretiko pedio - kathara gia emfanisi (p.x. "Diefthintis Ilektrologikis Syntirisis").
+    // DEN xrisimopoieitai pouthena gia dikaiomata/asfaleia - auto to kanei mono to "role".
+    @Column(nullable = true)
+    private String jobTitle;
+
     public User() {
     }
 
@@ -86,5 +91,13 @@ public class User {
 
     public void setActive(boolean active) {
         this.active = active;
+    }
+
+    public String getJobTitle() {
+        return jobTitle;
+    }
+
+    public void setJobTitle(String jobTitle) {
+        this.jobTitle = jobTitle;
     }
 }

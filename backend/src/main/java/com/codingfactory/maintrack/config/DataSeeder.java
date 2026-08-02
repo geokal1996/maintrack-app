@@ -32,16 +32,20 @@ public class DataSeeder implements CommandLineRunner {
             return;
         }
 
+        // O PROTOS xristis ftiaxnetai me ton PIO PSILO rolo (MANAGER), giati mono MANAGER
+        // mporei na dimiourgisei SUPERVISOR-logariasmous meta - alliws menoume kollimenoi
+        // (kaneis den tha mporouse na ftiaxei ton proto SUPERVISOR).
         User admin = new User(
                 "admin",
                 passwordEncoder.encode("Admin123!"),
                 "System Administrator",
-                Role.SUPERVISOR
+                Role.MANAGER
         );
+        admin.setJobTitle("Διευθυντής Συντήρησης");
         userRepository.save(admin);
 
         log.warn("=====================================================================");
-        log.warn(" DEN BRETHIKAN XRISTES - ftiaxtike arxikos SUPERVISOR gia na ksekiniseis:");
+        log.warn(" DEN BRETHIKAN XRISTES - ftiaxtike arxikos MANAGER gia na ksekiniseis:");
         log.warn("   username: admin");
         log.warn("   password: Admin123!");
         log.warn(" Alaxe ton kodiko i sviise auton to xristi meta to proto sou login.");

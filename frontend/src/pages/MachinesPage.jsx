@@ -7,7 +7,7 @@ const STATUSES = ["OPERATIONAL", "DOWN", "UNDER_MAINTENANCE"];
 const emptyForm = { code: "", name: "", area: "", status: "OPERATIONAL" };
 
 export default function MachinesPage() {
-  const { isSupervisor } = useAuth();
+  const { canManageMachines, canDeleteMachines } = useAuth();
   const [machines, setMachines] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -47,7 +47,7 @@ export default function MachinesPage() {
       <div className="card">
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <h2 style={{ margin: 0 }}>Μηχανές</h2>
-          {isSupervisor && (
+          {canManageMachines && (
             <button className="btn" onClick={() => setShowForm((s) => !s)}>
               {showForm ? "Ακύρωση" : "+ Νέα μηχανή"}
             </button>
@@ -93,7 +93,7 @@ export default function MachinesPage() {
                 <th>Όνομα</th>
                 <th>Περιοχή</th>
                 <th>Κατάσταση</th>
-                {isSupervisor && <th></th>}
+                {canDeleteMachines && <th></th>}
               </tr>
             </thead>
             <tbody>
@@ -103,7 +103,7 @@ export default function MachinesPage() {
                   <td>{m.name}</td>
                   <td>{m.area}</td>
                   <td><span className={`badge status-${m.status}`}>{m.status}</span></td>
-                  {isSupervisor && (
+                  {canDeleteMachines && (
                     <td>
                       <button className="btn danger" onClick={() => handleDelete(m.id)}>Διαγραφή</button>
                     </td>

@@ -20,6 +20,9 @@ public class UserRequest {
     @NotNull(message = "O rolos einai ipoxreotikos")
     private Role role;
 
+    // Proaiaretiko - den exei @NotBlank giati mporei na meinei kenos
+    private String jobTitle;
+
     public String getUsername() {
         return username;
     }
@@ -50,5 +53,13 @@ public class UserRequest {
 
     public void setRole(Role role) {
         this.role = role;
+    }
+
+    public String getJobTitle() {
+        return jobTitle;
+    }
+
+    public void setJobTitle(String jobTitle) {
+        this.jobTitle = jobTitle;
     }
 }
