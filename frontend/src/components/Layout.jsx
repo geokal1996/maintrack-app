@@ -20,6 +20,7 @@ export default function Layout() {
           <NavLink to="/" end>Dashboard</NavLink>
           <NavLink to="/machines">Μηχανές</NavLink>
           <NavLink to="/faults">Βλάβες</NavLink>
+          <NavLink to="/pareto">Pareto</NavLink>
           {canManageUsers && <NavLink to="/users">Χρήστες</NavLink>}
         </nav>
         <div className="user-info">

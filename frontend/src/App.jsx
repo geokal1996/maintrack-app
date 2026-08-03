@@ -9,6 +9,7 @@ import MachinesPage from "./pages/MachinesPage";
 import FaultsPage from "./pages/FaultsPage";
 import FaultDetailPage from "./pages/FaultDetailPage";
 import UsersPage from "./pages/UsersPage";
+import ParetoPage from "./pages/ParetoPage";
 
 export default function App() {
   return (
@@ -24,6 +25,7 @@ export default function App() {
               <Route path="/machines" element={<MachinesPage />} />
               <Route path="/faults" element={<FaultsPage />} />
               <Route path="/faults/:id" element={<FaultDetailPage />} />
+              <Route path="/pareto" element={<ParetoPage />} />
 
               {/* Auto to route xreiazetai EPIPLEON kai rolo SUPERVISOR */}
               <Route element={<RequireSupervisor />}>
