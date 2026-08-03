@@ -80,6 +80,13 @@
             <scope>runtime</scope>
         </dependency>
 
+        <!-- Apache POI - gia na diavazoume kai na ftiaxnoume arxeia Excel (.xlsx) -->
+        <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi-ooxml</artifactId>
+            <version>5.4.1</version>
+        </dependency>
+
         <!-- Gia unit tests -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

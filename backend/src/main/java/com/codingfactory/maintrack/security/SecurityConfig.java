@@ -105,6 +105,10 @@ public class SecurityConfig {
                         // na dimiourgisei o kathenas elenxetai pio analytika mesa sto UserService)
                         .requestMatchers("/api/users/**").hasAnyRole("SUPERVISOR", "MANAGER")
 
+                        // Mazikí eisagogí vlavón apo Excel -> SUPERVISOR i MANAGER.
+                        // PROSOXI: prepei na einai PANO apo to .anyRequest(), alliws den tha efarmostei.
+                        .requestMatchers("/api/faults/import/**").hasAnyRole("SUPERVISOR", "MANAGER")
+
                         // Ola ta alla (GET machines, faults, actions...) -> aploustata na eisai syndedemenos
                         .anyRequest().authenticated()
                 )

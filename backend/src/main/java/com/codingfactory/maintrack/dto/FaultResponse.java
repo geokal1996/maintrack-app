@@ -20,6 +20,7 @@ public class FaultResponse {
     private FaultStatus status;
     private LocalDateTime createdAt;
     private LocalDateTime resolvedAt;
+    private String externalRef;
 
     public static FaultResponse from(Fault fault) {
         FaultResponse dto = new FaultResponse();
@@ -35,6 +36,7 @@ public class FaultResponse {
         dto.status = fault.getStatus();
         dto.createdAt = fault.getCreatedAt();
         dto.resolvedAt = fault.getResolvedAt();
+        dto.externalRef = fault.getExternalRef();
         return dto;
     }
 
@@ -84,5 +86,9 @@ public class FaultResponse {
 
     public LocalDateTime getResolvedAt() {
         return resolvedAt;
+    }
+
+    public String getExternalRef() {
+        return externalRef;
     }
 }

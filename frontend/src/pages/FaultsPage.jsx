@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { getFaults, createFault } from "../api/faultsApi";
 import { getMachines } from "../api/machinesApi";
+import ExcelImportPanel from "../components/ExcelImportPanel";
 
 const STATUSES = ["OPEN", "IN_PROGRESS", "RESOLVED", "CLOSED"];
 const SEVERITIES = ["LOW", "MEDIUM", "HIGH", "CRITICAL"];
@@ -10,7 +11,7 @@ const SEVERITIES = ["LOW", "MEDIUM", "HIGH", "CRITICAL"];
 const emptyForm = { machineId: "", title: "", description: "", severity: "MEDIUM" };
 
 export default function FaultsPage() {
-  const { user } = useAuth();
+  const { user, canManageUsers } = useAuth();
   const [faults, setFaults] = useState([]);
   const [machines, setMachines] = useState([]);
   const [statusFilter, setStatusFilter] = useState("");
@@ -93,6 +94,10 @@ export default function FaultsPage() {
           </form>
         )}
       </div>
+
+      {/* I mazikí eisagogí einai dikaioma SUPERVISOR/MANAGER - to idio pou
+          xrisimopoioume kai gia ti diaxeirisi xriston (canManageUsers). */}
+      {canManageUsers && <ExcelImportPanel onImported={loadFaults} />}
 
       <div className="card">
         <div className="filters-row">

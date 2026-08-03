@@ -40,6 +40,17 @@ public class Fault {
 
     private LocalDateTime resolvedAt;
 
+    // Exoteriki anafora (p.x. arithmos gnostopoiisis apo SAP). Xrisimopoieitai
+    // apo to import gia na MIN ksanadimiourgithei i idia vlavi an anevasoume
+    // to idio arxeio dio fores. Menei null gia vlaves pou ftiaxnontai xeirokinita.
+    //
+    // PROSOXI: DEN bazoume "unique = true" epitides. Sto SQL Server ena UNIQUE
+    // constraint theorei ola ta NULL isa metaxi tous, opote tha epetrepe MONO MIA
+    // vlavi me keno externalRef - kai oles oi yparxouses vlaves exoun akrivos auto.
+    // O elegxos monadikotitas ginetai sto FaultImportService (findByExternalRef).
+    @Column(name = "external_ref")
+    private String externalRef;
+
     public Fault() {
     }
 
@@ -123,5 +134,13 @@ public class Fault {
 
     public void setResolvedAt(LocalDateTime resolvedAt) {
         this.resolvedAt = resolvedAt;
+    }
+
+    public String getExternalRef() {
+        return externalRef;
+    }
+
+    public void setExternalRef(String externalRef) {
+        this.externalRef = externalRef;
     }
 }
