@@ -50,6 +50,14 @@
   --radius-sm: 9px;
   --skeleton-1: #e2e8f0;
   --skeleton-2: #eef2f7;
+
+  /* Ydatografima selidas (PageBackground) */
+  --art: #1e293b;
+  --art-opacity: 0.1;
+
+  /* Megisto platos periexomenou - to xrisimopoiei kai to ydatografima
+     gia na ypologisei poso xoros perissevei stis akres */
+  --content-max: 1180px;
 }
 
 [data-theme="dark"] {
@@ -89,6 +97,9 @@
 
   --skeleton-1: #1a2338;
   --skeleton-2: #222d47;
+
+  --art: #7dd3fc;
+  --art-opacity: 0.14;
 }
 
 * {
@@ -274,28 +285,74 @@ h1, h2, h3 {
   display: none;
 }
 
+/* Ydatografima stis DYO PLEURES tis selidas (component PageBackground).
+
+   To platos kathe loridas = (platos othonis - platos periexomenou) / 2, dld
+   AKRIVOS o xoros pou perissevei dexia kai aristera. Etsi to sxedio den mpainei
+   POTE kato apo kartes/pinakes/diagrammata. An i othoni einai mikri kai den
+   perissevei tipota, to "max(0px, ...)" to midenizei kai eksafanizetai. */
+.page-art {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: var(--art-opacity);
+}
+
+.art-side {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: max(0px, calc((100vw - var(--content-max)) / 2 - 10px));
+  overflow: hidden;
+  animation: art-in 0.75s ease-out;
+}
+
+.art-left { left: 0; }
+.art-right { right: 0; }
+
+.art-side svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+@keyframes art-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .art-side { animation: none; }
+}
+
 /* To periexomeno prosarmozetai sto platos tis othonis:
-   se megali othoni "anoigei", se mikri piani olo to platos me ligotero padding. */
+   se megali othoni "anoigei", se mikri piani olo to platos me ligotero padding.
+   I metavliti --content-max ti xrisimopoiei KAI to ydatografima parapano. */
 .page-content {
+  position: relative;
+  z-index: 1;
   flex: 1;
   width: 100%;
   margin: 0 auto;
   padding: 1.75rem 1.5rem 3rem;
-  max-width: 1180px;
+  max-width: var(--content-max);
 }
 
 /* Laptop / megalo monitor */
 @media (min-width: 1500px) {
+  :root { --content-max: 1400px; }
+
   .page-content {
-    max-width: 1400px;
     padding: 2rem 2rem 3.5rem;
   }
 }
 
 /* Poly megali / ultrawide othoni */
 @media (min-width: 1900px) {
+  :root { --content-max: 1680px; }
+
   .page-content {
-    max-width: 1680px;
     padding: 2.25rem 2.5rem 4rem;
   }
 }

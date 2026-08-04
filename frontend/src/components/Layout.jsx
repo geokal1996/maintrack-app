@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { NavLink, Outlet, useNavigate } from "react-router-dom";
+import { NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
 import {
   LayoutDashboard,
   Cog,
@@ -15,6 +15,16 @@ import {
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
+import PageBackground from "./PageBackground";
+
+// Poio ydatografima taeriazei se kathe selida
+function artVariantFor(pathname) {
+  if (pathname.startsWith("/machines")) return "machines";
+  if (pathname.startsWith("/faults")) return "faults";
+  if (pathname.startsWith("/pareto")) return "pareto";
+  if (pathname.startsWith("/users")) return "users";
+  return "dashboard";
+}
 
 // Auto einai to "periblima" pou emfanizetai se OLES tis selides meta to login:
 // panw i mpara plohgisis, kai apo katw to periexomeno tis kathe selidas (<Outlet />).
@@ -23,6 +33,7 @@ export default function Layout() {
   const { isDark, toggleTheme } = useTheme();
   const [menuOpen, setMenuOpen] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
 
   function handleLogout() {
     logout();
@@ -48,6 +59,8 @@ export default function Layout() {
 
   return (
     <div className="app-shell">
+      <PageBackground variant={artVariantFor(location.pathname)} />
+
       <header className="navbar">
         <div className="brand">
           <span className="brand-mark">
