@@ -1,1 +1,19 @@
 .env
+
+# --- Pragmatika dedomena: NA MIN MPAINOUN POTE STO REPO ---
+# Exports apo SAP i alla systimata tis etaireias periexoun pragmatika stoixeia
+# (kodikous mihanon, perigrafes vlavon, onomata xriston). To repo tha ginei
+# DIMOSIO prin tin paradosi, opote tetoia arxeia den prepei na yparxoun oute
+# stin istoria tou git.
+*.xlsx
+*.xls
+*.xlsm
+*.csv
+
+# Eksairesi: ta DIKA MAS ypodeigmata, pou exoun MONO fantastika dedomena
+!samples/*.xlsx
+
+# --- Build output ---
+node_modules/
+dist/
+target/

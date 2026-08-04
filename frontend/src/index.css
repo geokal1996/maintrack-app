@@ -1,20 +1,136 @@
+/* ============================================================
+   Maintrack - Design System
+   Ola ta xromata orizontai san CSS variables. Etsi to dark mode
+   einai apla ena allo set timon gia tis idies metavlites - den
+   xreiazetai na ksanagrapsoume kanena style.
+   ============================================================ */
+
+:root {
+  /* Epifaneies */
+  --bg: #f1f5f9;
+  --bg-gradient: radial-gradient(1200px 600px at 10% -10%, #e0e7ff 0%, transparent 60%),
+                 radial-gradient(900px 500px at 100% 0%, #ccfbf1 0%, transparent 55%);
+  --surface: #ffffff;
+  --surface-2: #f8fafc;
+  --surface-hover: #f1f5f9;
+  --border: #e2e8f0;
+  --border-strong: #cbd5e1;
+
+  /* Keimeno */
+  --text: #0f172a;
+  --text-muted: #64748b;
+  --text-inverse: #ffffff;
+
+  /* Markes */
+  --primary: #4f46e5;
+  --primary-hover: #4338ca;
+  --primary-soft: #eef2ff;
+  --danger: #dc2626;
+  --danger-hover: #b91c1c;
+  --danger-soft: #fee2e2;
+  --success: #16a34a;
+  --success-soft: #dcfce7;
+  --warning: #d97706;
+  --warning-soft: #fef3c7;
+  --info: #0891b2;
+  --info-soft: #cffafe;
+
+  /* Navbar */
+  --nav-bg: rgba(15, 23, 42, 0.92);
+  --nav-text: #cbd5e1;
+  --nav-text-active: #ffffff;
+  --nav-active-bg: rgba(255, 255, 255, 0.12);
+
+  /* Skies */
+  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.06);
+  --shadow: 0 1px 3px rgba(15, 23, 42, 0.08), 0 8px 24px -12px rgba(15, 23, 42, 0.18);
+  --shadow-lg: 0 10px 40px -12px rgba(15, 23, 42, 0.28);
+
+  --radius: 14px;
+  --radius-sm: 9px;
+  --skeleton-1: #e2e8f0;
+  --skeleton-2: #eef2f7;
+}
+
+[data-theme="dark"] {
+  --bg: #0b1220;
+  --bg-gradient: radial-gradient(1200px 600px at 10% -10%, #1e1b4b 0%, transparent 60%),
+                 radial-gradient(900px 500px at 100% 0%, #042f2e 0%, transparent 55%);
+  --surface: #111a2e;
+  --surface-2: #0f1729;
+  --surface-hover: #172136;
+  --border: #1f2b45;
+  --border-strong: #2b3a5c;
+
+  --text: #e6edf7;
+  --text-muted: #94a3b8;
+
+  --primary: #818cf8;
+  --primary-hover: #a5b4fc;
+  --primary-soft: #1e1b4b;
+  --danger: #f87171;
+  --danger-hover: #fca5a5;
+  --danger-soft: #3f1d1d;
+  --success: #4ade80;
+  --success-soft: #14321f;
+  --warning: #fbbf24;
+  --warning-soft: #3a2a08;
+  --info: #22d3ee;
+  --info-soft: #0b3a44;
+
+  --nav-bg: rgba(9, 14, 26, 0.92);
+  --nav-text: #94a3b8;
+  --nav-text-active: #ffffff;
+  --nav-active-bg: rgba(255, 255, 255, 0.09);
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow: 0 1px 3px rgba(0, 0, 0, 0.45), 0 8px 24px -12px rgba(0, 0, 0, 0.7);
+  --shadow-lg: 0 10px 40px -12px rgba(0, 0, 0, 0.8);
+
+  --skeleton-1: #1a2338;
+  --skeleton-2: #222d47;
+}
+
 * {
   box-sizing: border-box;
 }
 
+html {
+  color-scheme: light;
+}
+
+/* To data-theme mpainei PANO sto <html> apo to ThemeContext */
+html[data-theme="dark"] {
+  color-scheme: dark;
+}
+
 body {
   margin: 0;
-  font-family: -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
-  background: #f4f5f7;
-  color: #1a1a1a;
+  font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, "Helvetica Neue", Arial, sans-serif;
+  background-color: var(--bg);
+  background-image: var(--bg-gradient);
+  background-attachment: fixed;
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+  transition: background-color 0.25s ease, color 0.25s ease;
 }
 
 a {
-  color: #2563eb;
+  color: var(--primary);
   text-decoration: none;
+  font-weight: 500;
 }
 
-/* --- Layout / Navbar --- */
+a:hover {
+  text-decoration: underline;
+}
+
+h1, h2, h3 {
+  letter-spacing: -0.015em;
+}
+
+/* ---------------- Layout / Navbar ---------------- */
+
 .app-shell {
   min-height: 100vh;
   display: flex;
@@ -22,179 +138,581 @@ a {
 }
 
 .navbar {
-  background: #1e293b;
+  background: var(--nav-bg);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   color: white;
-  padding: 0.75rem 1.5rem;
+  padding: 0.6rem 1.5rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 1rem;
+  position: sticky;
+  top: 0;
+  z-index: 50;
 }
 
 .navbar .brand {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
   font-weight: 700;
-  font-size: 1.1rem;
+  font-size: 1.05rem;
+  color: #fff;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+}
+
+.navbar .brand .brand-mark {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  background: linear-gradient(135deg, #6366f1, #14b8a6);
+  color: #fff;
+  box-shadow: 0 4px 14px -4px rgba(99, 102, 241, 0.8);
 }
 
 .navbar nav {
   display: flex;
-  gap: 1.25rem;
+  gap: 0.25rem;
   align-items: center;
+  flex: 1;
+  justify-content: center;
 }
 
 .navbar nav a {
-  color: #cbd5e1;
-  font-size: 0.95rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: var(--nav-text);
+  font-size: 0.9rem;
+  font-weight: 500;
+  padding: 0.45rem 0.8rem;
+  border-radius: 8px;
+  transition: background 0.15s ease, color 0.15s ease;
+  white-space: nowrap;
 }
 
-.navbar nav a.active,
 .navbar nav a:hover {
-  color: white;
+  color: var(--nav-text-active);
+  background: var(--nav-active-bg);
+  text-decoration: none;
+}
+
+.navbar nav a.active {
+  color: var(--nav-text-active);
+  background: var(--nav-active-bg);
 }
 
 .navbar .user-info {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  font-size: 0.9rem;
-  color: #cbd5e1;
+  gap: 0.6rem;
+  font-size: 0.85rem;
+  color: var(--nav-text);
+  white-space: nowrap;
 }
 
-.navbar button.logout {
-  background: #334155;
-  color: white;
-  border: none;
-  padding: 0.4rem 0.8rem;
-  border-radius: 4px;
+.navbar .user-chip {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.navbar .avatar {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #6366f1, #0ea5e9);
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.navbar .user-name {
+  line-height: 1.15;
+}
+
+.navbar .user-name strong {
+  display: block;
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.navbar .user-name span {
+  font-size: 0.7rem;
+  opacity: 0.75;
+}
+
+.icon-btn {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.07);
+  color: #e2e8f0;
   cursor: pointer;
+  transition: background 0.15s ease, transform 0.1s ease;
 }
 
-.navbar button.logout:hover {
-  background: #475569;
+.icon-btn:hover {
+  background: rgba(255, 255, 255, 0.16);
 }
 
+.icon-btn:active {
+  transform: scale(0.94);
+}
+
+.nav-toggle {
+  display: none;
+}
+
+/* To periexomeno prosarmozetai sto platos tis othonis:
+   se megali othoni "anoigei", se mikri piani olo to platos me ligotero padding. */
 .page-content {
   flex: 1;
-  padding: 1.5rem;
-  max-width: 1100px;
   width: 100%;
   margin: 0 auto;
+  padding: 1.75rem 1.5rem 3rem;
+  max-width: 1180px;
 }
 
-/* --- Cards / Panels --- */
+/* Laptop / megalo monitor */
+@media (min-width: 1500px) {
+  .page-content {
+    max-width: 1400px;
+    padding: 2rem 2rem 3.5rem;
+  }
+}
+
+/* Poly megali / ultrawide othoni */
+@media (min-width: 1900px) {
+  .page-content {
+    max-width: 1680px;
+    padding: 2.25rem 2.5rem 4rem;
+  }
+}
+
+/* Tablet: to menu mikrainei gia na xoresei */
+@media (max-width: 1080px) and (min-width: 861px) {
+  .navbar nav a {
+    padding: 0.45rem 0.6rem;
+    font-size: 0.85rem;
+  }
+
+  .navbar .user-name {
+    display: none;
+  }
+}
+
+/* Kinito / mikri othoni: to menu ginetai katheto kai anoigei me to hamburger */
+@media (max-width: 860px) {
+  .navbar {
+    flex-wrap: wrap;
+    padding: 0.6rem 1rem;
+  }
+
+  .nav-toggle {
+    display: grid;
+    order: 3;
+  }
+
+  .navbar nav {
+    order: 4;
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    gap: 0.15rem;
+    padding-top: 0.6rem;
+    display: none;
+  }
+
+  .navbar nav.open {
+    display: flex;
+  }
+
+  .navbar nav a {
+    padding: 0.6rem 0.75rem;
+  }
+
+  .navbar .user-info {
+    order: 2;
+    margin-left: auto;
+  }
+
+  .navbar .user-name {
+    display: none;
+  }
+
+  .page-content {
+    padding: 1.25rem 1rem 2.5rem;
+  }
+
+  .page-title {
+    font-size: 1.25rem;
+    flex-wrap: wrap;
+  }
+
+  .card {
+    padding: 1.1rem;
+    border-radius: 12px;
+  }
+
+  .card-header {
+    align-items: flex-start;
+  }
+}
+
+/* Poly mikro kinito */
+@media (max-width: 520px) {
+  .page-content {
+    padding: 1rem 0.75rem 2rem;
+  }
+
+  .card {
+    padding: 0.95rem 0.85rem;
+  }
+
+  .page-title .sub {
+    width: 100%;
+  }
+
+  .stat-card {
+    padding: 0.95rem 1rem;
+  }
+
+  .stat-card .value {
+    font-size: 1.6rem;
+  }
+
+  /* Ta filtra kai ta koumpia se stili, oxi dipla-dipla */
+  .filters-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .filters-row .form-row {
+    max-width: none !important;
+  }
+
+  .form-actions button.btn,
+  .card-header button.btn {
+    width: 100%;
+  }
+
+  .card-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.65rem;
+  }
+
+  .login-box {
+    padding: 1.75rem 1.35rem;
+  }
+}
+
+/* ---------------- Cards ---------------- */
+
 .card {
-  background: white;
-  border-radius: 8px;
-  padding: 1.25rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.35rem;
+  box-shadow: var(--shadow);
   margin-bottom: 1.25rem;
 }
 
 .card h2 {
   margin-top: 0;
-  font-size: 1.15rem;
+  margin-bottom: 0.9rem;
+  font-size: 1.05rem;
+  font-weight: 650;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.card-header h2 {
+  margin: 0;
+}
+
+.page-title {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 1.45rem;
+  font-weight: 700;
+  margin: 0 0 1.25rem;
+  letter-spacing: -0.025em;
+}
+
+.page-title .sub {
+  font-size: 0.85rem;
+  font-weight: 400;
+  color: var(--text-muted);
 }
 
 .grid-3 {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(215px, 1fr));
   gap: 1rem;
 }
 
-.stat-box {
-  text-align: center;
+.grid-2 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.25rem;
+  align-items: start;
 }
 
-.stat-box .value {
-  font-size: 2rem;
+/* ---------------- Stat cards ---------------- */
+
+.stat-card {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.15rem 1.25rem;
+}
+
+.stat-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 4px;
+  background: var(--accent, var(--primary));
+}
+
+.stat-card .stat-icon {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 12px;
+  background: var(--accent-soft, var(--primary-soft));
+  color: var(--accent, var(--primary));
+  flex-shrink: 0;
+}
+
+.stat-card .value {
+  font-size: 1.9rem;
   font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+  color: var(--text);
 }
 
-.stat-box .label {
-  color: #64748b;
-  font-size: 0.85rem;
+.stat-card .label {
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  margin-top: 0.15rem;
 }
 
-/* --- Tables --- */
+/* ---------------- Tables ---------------- */
+
+.table-wrap {
+  overflow-x: auto;
+  margin: 0 -0.35rem;
+  padding: 0 0.35rem;
+}
+
 table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.92rem;
+  font-size: 0.9rem;
 }
 
 th, td {
   text-align: left;
-  padding: 0.55rem 0.6rem;
-  border-bottom: 1px solid #e5e7eb;
+  padding: 0.7rem 0.65rem;
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
 }
 
 th {
-  color: #64748b;
+  color: var(--text-muted);
   font-weight: 600;
-  font-size: 0.8rem;
+  font-size: 0.72rem;
   text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid var(--border-strong);
+  white-space: nowrap;
 }
 
-tr:hover td {
-  background: #f8fafc;
+tbody tr {
+  transition: background 0.12s ease;
 }
 
-/* --- Forms --- */
+tbody tr:hover td {
+  background: var(--surface-hover);
+}
+
+tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* Leptí kathetí grammí aristera se kathe grammí, xromatismeni analoga
+   me ti sovarotita - san Jira/Linear. Kanei ti lista polý pio "diavastí". */
+td.sev-cell {
+  position: relative;
+  padding-left: 0.9rem;
+}
+
+td.sev-cell::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 20%;
+  bottom: 20%;
+  width: 3px;
+  border-radius: 3px;
+  background: var(--border-strong);
+}
+
+td.sev-cell.sev-LOW::before { background: #94a3b8; }
+td.sev-cell.sev-MEDIUM::before { background: var(--warning); }
+td.sev-cell.sev-HIGH::before { background: #ea580c; }
+td.sev-cell.sev-CRITICAL::before { background: var(--danger); }
+
+.mono {
+  font-family: "Cascadia Mono", Consolas, "SF Mono", monospace;
+  font-size: 0.86rem;
+  font-weight: 600;
+}
+
+/* ---------------- Forms ---------------- */
+
 .form-row {
   margin-bottom: 0.9rem;
   display: flex;
   flex-direction: column;
-  gap: 0.3rem;
+  gap: 0.35rem;
 }
 
 .form-row label {
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   font-weight: 600;
-  color: #334155;
+  color: var(--text);
 }
 
 .form-row input,
 .form-row select,
-.form-row textarea {
-  padding: 0.5rem 0.6rem;
-  border: 1px solid #cbd5e1;
-  border-radius: 4px;
-  font-size: 0.95rem;
+.form-row textarea,
+input[type="file"] {
+  padding: 0.6rem 0.7rem;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  font-size: 0.93rem;
+  font-family: inherit;
+  background: var(--surface-2);
+  color: var(--text);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.form-row input:focus,
+.form-row select:focus,
+.form-row textarea:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-soft);
+}
+
+.form-row input::placeholder,
+.form-row textarea::placeholder {
+  color: var(--text-muted);
 }
 
 .form-actions {
   display: flex;
   gap: 0.6rem;
+  flex-wrap: wrap;
 }
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 0 1rem;
+}
+
+/* ---------------- Buttons ---------------- */
 
 button.btn {
-  background: #2563eb;
-  color: white;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  background: var(--primary);
+  color: #fff;
   border: none;
-  padding: 0.55rem 1.1rem;
-  border-radius: 4px;
-  font-size: 0.9rem;
+  padding: 0.58rem 1.05rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.88rem;
+  font-weight: 600;
+  font-family: inherit;
   cursor: pointer;
+  transition: background 0.15s ease, transform 0.08s ease, box-shadow 0.15s ease;
+  box-shadow: var(--shadow-sm);
 }
 
-button.btn:hover {
-  background: #1d4ed8;
+button.btn:hover:not(:disabled) {
+  background: var(--primary-hover);
+}
+
+button.btn:active:not(:disabled) {
+  transform: translateY(1px);
 }
 
 button.btn.secondary {
-  background: #e2e8f0;
-  color: #1e293b;
+  background: var(--surface-2);
+  color: var(--text);
+  border: 1px solid var(--border-strong);
 }
 
-button.btn.secondary:hover {
-  background: #cbd5e1;
+button.btn.secondary:hover:not(:disabled) {
+  background: var(--surface-hover);
 }
 
 button.btn.danger {
-  background: #dc2626;
+  background: var(--danger);
 }
 
-button.btn.danger:hover {
-  background: #b91c1c;
+button.btn.danger:hover:not(:disabled) {
+  background: var(--danger-hover);
+}
+
+button.btn.ghost {
+  background: transparent;
+  color: var(--text-muted);
+  border: 1px solid transparent;
+  box-shadow: none;
+  padding: 0.4rem 0.6rem;
+}
+
+button.btn.ghost:hover:not(:disabled) {
+  background: var(--surface-hover);
+  color: var(--text);
+}
+
+button.btn.small {
+  padding: 0.38rem 0.7rem;
+  font-size: 0.8rem;
 }
 
 button.btn:disabled {
@@ -202,59 +720,181 @@ button.btn:disabled {
   cursor: not-allowed;
 }
 
-/* --- Badges --- */
+/* ---------------- Badges ---------------- */
+
 .badge {
-  display: inline-block;
-  padding: 0.15rem 0.55rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.22rem 0.6rem;
   border-radius: 999px;
-  font-size: 0.75rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.badge.status-OPERATIONAL { background: var(--success-soft); color: var(--success); }
+.badge.status-DOWN { background: var(--danger-soft); color: var(--danger); }
+.badge.status-UNDER_MAINTENANCE { background: var(--warning-soft); color: var(--warning); }
+
+.badge.status-OPEN { background: var(--danger-soft); color: var(--danger); }
+.badge.status-IN_PROGRESS { background: var(--warning-soft); color: var(--warning); }
+.badge.status-RESOLVED { background: var(--info-soft); color: var(--info); }
+.badge.status-CLOSED { background: var(--surface-hover); color: var(--text-muted); }
+
+.badge.severity-LOW { background: var(--surface-hover); color: var(--text-muted); }
+.badge.severity-MEDIUM { background: var(--warning-soft); color: var(--warning); }
+.badge.severity-HIGH { background: #ffedd5; color: #c2410c; }
+.badge.severity-CRITICAL { background: var(--danger-soft); color: var(--danger); }
+
+[data-theme="dark"] .badge.severity-HIGH { background: #3d1f08; color: #fb923c; }
+
+.badge.role-MANAGER { background: var(--primary-soft); color: var(--primary); }
+.badge.role-SUPERVISOR { background: var(--info-soft); color: var(--info); }
+.badge.role-TECHNICIAN { background: var(--surface-hover); color: var(--text-muted); }
+
+.badge.dot::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+/* ---------------- Timeline (energeies syntirisis) ---------------- */
+
+.timeline {
+  list-style: none;
+  margin: 0;
+  padding: 0 0 0 1.6rem;
+  position: relative;
+}
+
+.timeline::before {
+  content: "";
+  position: absolute;
+  left: 6px;
+  top: 6px;
+  bottom: 6px;
+  width: 2px;
+  background: var(--border);
+}
+
+.timeline li {
+  position: relative;
+  padding-bottom: 1.15rem;
+}
+
+.timeline li:last-child {
+  padding-bottom: 0;
+}
+
+.timeline li::before {
+  content: "";
+  position: absolute;
+  left: -1.6rem;
+  top: 4px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--surface);
+  border: 3px solid var(--primary);
+  box-shadow: 0 0 0 3px var(--surface);
+}
+
+.timeline .tl-head {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  flex-wrap: wrap;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-bottom: 0.2rem;
+}
+
+.timeline .tl-head strong {
+  color: var(--text);
+  font-size: 0.9rem;
+}
+
+.timeline .tl-body {
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  background: var(--surface-hover);
+  color: var(--text-muted);
+  border-radius: 999px;
+  padding: 0.15rem 0.55rem;
+  font-size: 0.72rem;
   font-weight: 600;
 }
 
-.badge.status-OPERATIONAL { background: #dcfce7; color: #166534; }
-.badge.status-DOWN { background: #fee2e2; color: #991b1b; }
-.badge.status-UNDER_MAINTENANCE { background: #fef9c3; color: #854d0e; }
+/* ---------------- Skeleton loaders ---------------- */
 
-.badge.status-OPEN { background: #fee2e2; color: #991b1b; }
-.badge.status-IN_PROGRESS { background: #fef9c3; color: #854d0e; }
-.badge.status-RESOLVED { background: #dbeafe; color: #1e40af; }
-.badge.status-CLOSED { background: #e5e7eb; color: #374151; }
+.skeleton {
+  border-radius: var(--radius-sm);
+  background: linear-gradient(90deg, var(--skeleton-1) 25%, var(--skeleton-2) 37%, var(--skeleton-1) 63%);
+  background-size: 400% 100%;
+  animation: shimmer 1.3s ease-in-out infinite;
+}
 
-.badge.severity-LOW { background: #e5e7eb; color: #374151; }
-.badge.severity-MEDIUM { background: #fef9c3; color: #854d0e; }
-.badge.severity-HIGH { background: #ffedd5; color: #9a3412; }
-.badge.severity-CRITICAL { background: #fee2e2; color: #991b1b; }
+@keyframes shimmer {
+  0% { background-position: 100% 50%; }
+  100% { background-position: 0 50%; }
+}
 
-/* --- Misc --- */
+.skeleton-row {
+  height: 14px;
+  margin-bottom: 0.75rem;
+}
+
+/* ---------------- Empty states ---------------- */
+
+.empty-state {
+  text-align: center;
+  padding: 2.25rem 1rem;
+  color: var(--text-muted);
+}
+
+.empty-state .empty-icon {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  margin: 0 auto 0.85rem;
+  border-radius: 14px;
+  background: var(--surface-hover);
+  color: var(--text-muted);
+}
+
+.empty-state p {
+  margin: 0;
+  font-size: 0.92rem;
+}
+
+/* ---------------- Misc ---------------- */
+
 .error-text {
-  color: #dc2626;
-  font-size: 0.88rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--danger);
+  font-size: 0.86rem;
+  background: var(--danger-soft);
+  padding: 0.55rem 0.75rem;
+  border-radius: var(--radius-sm);
+  margin: 0.5rem 0;
 }
 
 .muted {
-  color: #64748b;
+  color: var(--text-muted);
   font-size: 0.88rem;
-}
-
-.login-wrapper {
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #1e293b;
-}
-
-.login-box {
-  background: white;
-  padding: 2rem;
-  border-radius: 8px;
-  width: 320px;
-}
-
-.login-box h1 {
-  font-size: 1.3rem;
-  margin-bottom: 1.5rem;
-  text-align: center;
 }
 
 .filters-row {
@@ -262,4 +902,439 @@ button.btn:disabled {
   gap: 0.75rem;
   margin-bottom: 1rem;
   align-items: flex-end;
+  flex-wrap: wrap;
+}
+
+.divider {
+  height: 1px;
+  background: var(--border);
+  margin: 1.1rem 0;
+}
+
+/* ---------------- Login ---------------- */
+
+/* Othoni syndesis: skouro viomixaniko fonto (blueprint me grannazia, solines,
+   ergostasio, metriti piesis) se diafaneia, kai apo pano xromatista "fota". */
+.login-wrapper {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  overflow: hidden;
+  background: #0d1626;
+}
+
+
+/* To zontano viomixaniko sxedio (component IndustrialBackground) */
+.industrial-bg {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  animation: bg-drift 48s ease-in-out infinite alternate;
+}
+
+.industrial-bg svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* --- Ta animation tou fontou --- */
+
+@keyframes mt-spin-cw {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes mt-spin-ccw {
+  to { transform: rotate(-360deg); }
+}
+
+.mt-gear-cw,
+.mt-gear-ccw {
+  transform-origin: 0 0;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+.mt-gear-cw { animation-name: mt-spin-cw; }
+.mt-gear-ccw { animation-name: mt-spin-ccw; }
+
+/* I lamsi pou trexei panw sti lamarina aloyminiou */
+@keyframes mt-sheen-run {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(620px); }
+}
+
+.mt-sheen {
+  animation: mt-sheen-run 4.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* I lamsi tou xytiriou "anasaenei" */
+@keyframes mt-glow-pulse {
+  0%, 100% { opacity: 0.55; transform: scale(1); }
+  50%      { opacity: 1;    transform: scale(1.09); }
+}
+
+.mt-glow {
+  transform-origin: 400px 796px;
+  animation: mt-glow-pulse 3.4s ease-in-out infinite;
+}
+
+/* I roi tou liomenou metallou */
+@keyframes mt-pour-flicker {
+  0%, 100% { opacity: 0.75; stroke-width: 9; }
+  40%      { opacity: 1;    stroke-width: 11; }
+  70%      { opacity: 0.85; stroke-width: 8.5; }
+}
+
+.mt-pour {
+  animation: mt-pour-flicker 1.9s ease-in-out infinite;
+}
+
+@keyframes mt-pool-shimmer {
+  0%, 100% { opacity: 0.45; }
+  50%      { opacity: 0.8; }
+}
+
+.mt-pool {
+  animation: mt-pool-shimmer 2.7s ease-in-out infinite;
+}
+
+/* Spithes pou petagontai apo to liomeno metallo */
+@keyframes mt-spark-fly {
+  0%   { opacity: 0; transform: translate(0, 0) scale(0.5); }
+  15%  { opacity: 1; }
+  100% { opacity: 0; transform: translate(0, -110px) scale(0.2); }
+}
+
+.mt-spark {
+  animation: mt-spark-fly 4s ease-out infinite;
+  opacity: 0;
+}
+
+/* Kapnos apo tis kaminades */
+@keyframes mt-smoke-rise {
+  0%   { opacity: 0;    transform: translate(0, 0) scale(0.55); }
+  20%  { opacity: 0.16; }
+  100% { opacity: 0;    transform: translate(-26px, -190px) scale(2.4); }
+}
+
+.mt-smoke {
+  animation: mt-smoke-rise 8s linear infinite;
+  opacity: 0;
+}
+
+/* Roi mesa stous solines */
+@keyframes mt-flow-run {
+  to { stroke-dashoffset: -400; }
+}
+
+.mt-flow {
+  animation: mt-flow-run 9s linear infinite;
+}
+
+.mt-flow-2 {
+  animation-duration: 12s;
+  animation-direction: reverse;
+}
+
+.mt-flow-3 {
+  animation-duration: 15s;
+}
+
+/* O deiktis tou metriti piesis */
+@keyframes mt-needle-swing {
+  0%, 100% { transform: rotate(-8deg); }
+  35%      { transform: rotate(12deg); }
+  60%      { transform: rotate(4deg); }
+}
+
+.mt-needle {
+  transform-origin: 0 0;
+  animation: mt-needle-swing 6.5s ease-in-out infinite;
+}
+
+/* Ta xromatista "fota" apo pano - diskrita, gia na min skotinizoun ti skini */
+.login-wrapper::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(1000px 560px at 8% 6%, rgba(99, 102, 241, 0.30) 0%, transparent 60%),
+    radial-gradient(900px 560px at 92% 94%, rgba(20, 184, 166, 0.24) 0%, transparent 60%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* PROSOXI: mono to kouti syndesis paei pano-pano. An grafame ".login-wrapper > *"
+   tha epirreaze KAI to .industrial-bg (idia eidikotita) kai tha tou akyrone to
+   position:absolute - opote to fonto tha mikraine se ena koutaki. */
+.login-wrapper > .login-box {
+  position: relative;
+  z-index: 2;
+}
+
+/* Poly argí kinisi tou fontou - dinei "zontania" xoris na apospa */
+/* Poly diskreti kinisi - min megalonoume poly ti klimaka, giati me to "slice"
+   oso pio konta zoumaroume toso perissotero kovetai i skini. */
+@keyframes bg-drift {
+  from { transform: scale(1.01) translate(0, 0); }
+  to   { transform: scale(1.05) translate(-0.9%, -0.7%); }
+}
+
+/* An o xristis exei zitisei ligoteri kinisi apo to leitourgiko tou,
+   stamatame OLA ta animation tou fontou - menei mono to statiko sxedio. */
+@media (prefers-reduced-motion: reduce) {
+  .industrial-bg,
+  .industrial-bg * {
+    animation: none !important;
+  }
+}
+
+/* "Glass" karta: imidiafani, me tholó fonto piso tis, oste na fainetai
+   to viomixaniko sxedio xoris na xanetai i anagnosimotita tou keimenou. */
+.login-box {
+  background: rgba(15, 23, 42, 0.62);
+  backdrop-filter: blur(16px) saturate(140%);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  padding: 2.25rem 2rem;
+  border-radius: 20px;
+  width: 100%;
+  max-width: 390px;
+  box-shadow: 0 24px 60px -20px rgba(0, 0, 0, 0.75),
+              inset 0 1px 0 rgba(255, 255, 255, 0.09);
+  color: #e6edf7;
+}
+
+.login-box h1 {
+  color: #fff;
+}
+
+.login-box .form-row label {
+  color: #cbd5e1;
+}
+
+.login-box .form-row input {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(255, 255, 255, 0.18);
+  color: #fff;
+}
+
+.login-box .form-row input::placeholder {
+  color: rgba(226, 232, 240, 0.45);
+}
+
+.login-box .form-row input:focus {
+  border-color: #818cf8;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.28);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* O Chrome, otan symplironei automata (autofill), epivalei diko tou aspro fonto
+   kai agnoei to background mas. To "kolpo" einai ena teratodes inset shadow pou
+   skepazei to aspro, kai to -webkit-text-fill-color gia to xroma tou keimenou. */
+.login-box .form-row input:-webkit-autofill,
+.login-box .form-row input:-webkit-autofill:hover,
+.login-box .form-row input:-webkit-autofill:focus {
+  -webkit-text-fill-color: #fff;
+  caret-color: #fff;
+  -webkit-box-shadow: 0 0 0 1000px rgba(30, 41, 59, 0.92) inset;
+  box-shadow: 0 0 0 1000px rgba(30, 41, 59, 0.92) inset;
+  transition: background-color 9999s ease-in-out 0s;
+}
+
+.login-box .error-text {
+  background: rgba(220, 38, 38, 0.18);
+  color: #fca5a5;
+}
+
+.login-box button.btn {
+  background: linear-gradient(135deg, #6366f1, #4f46e5);
+}
+
+.login-box button.btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #818cf8, #4338ca);
+}
+
+.login-logo {
+  display: grid;
+  place-items: center;
+  width: clamp(54px, 5.5vw, 96px);
+  height: clamp(54px, 5.5vw, 96px);
+  margin: 0 auto 1.1rem;
+  border-radius: 22px;
+  background: linear-gradient(135deg, #6366f1, #14b8a6);
+  color: #fff;
+  box-shadow: 0 10px 26px -8px rgba(99, 102, 241, 0.75);
+}
+
+.login-logo svg {
+  width: 52%;
+  height: 52%;
+}
+
+.login-box h1 {
+  font-size: clamp(1.4rem, 2.2vw, 2.4rem);
+  margin: 0 0 0.4rem;
+  text-align: center;
+  letter-spacing: -0.025em;
+}
+
+.login-box .login-sub {
+  text-align: center;
+  color: #94a3b8;
+  font-size: 0.85rem;
+  margin: 0 0 1.6rem;
+}
+
+.login-hint {
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+  border-top: 1px dashed rgba(255, 255, 255, 0.16);
+  font-size: 0.78rem;
+  color: #94a3b8;
+  text-align: center;
+  line-height: 1.7;
+}
+
+.login-hint code {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 0.12rem 0.4rem;
+  border-radius: 5px;
+  font-size: 0.95em;
+  color: #e2e8f0;
+  font-family: "Cascadia Mono", Consolas, monospace;
+}
+
+/* Diakoptis "Dokimastikoi logariasmoi" */
+.demo-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: none;
+  border: none;
+  color: #94a3b8;
+  font-family: inherit;
+  font-size: inherit;
+  cursor: pointer;
+  padding: 0.2rem 0.3rem;
+  border-radius: 6px;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+
+.demo-toggle:hover {
+  color: #e2e8f0;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.demo-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-top: 0.7rem;
+}
+
+.demo-account {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  width: 100%;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 0.45rem 0.6rem;
+  color: #cbd5e1;
+  font-family: inherit;
+  font-size: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.demo-account:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(129, 140, 248, 0.5);
+}
+
+.demo-account .demo-role {
+  color: #94a3b8;
+  white-space: nowrap;
+  font-size: 0.92em;
+}
+
+.demo-note {
+  margin: 0.35rem 0 0;
+  font-size: 0.9em;
+  opacity: 0.7;
+}
+
+/* --- To kouti syndesis megalonei mazi me tin othoni --- */
+
+/* Kanoniko laptop */
+@media (min-width: 1100px) {
+  .login-box {
+    max-width: 470px;
+    padding: 2.8rem 2.6rem;
+    border-radius: 24px;
+  }
+
+  .login-box .login-sub { font-size: 0.95rem; margin-bottom: 2rem; }
+  .login-box .form-row { margin-bottom: 1.05rem; }
+  .login-box .form-row label { font-size: 0.9rem; }
+  .login-box .form-row input { padding: 0.78rem 0.9rem; font-size: 1rem; }
+  .login-box button.btn { padding: 0.78rem 1.15rem; font-size: 1rem; }
+  .login-hint { font-size: 0.83rem; margin-top: 1.5rem; padding-top: 1.2rem; }
+}
+
+/* Megalo monitor */
+@media (min-width: 1450px) {
+  .login-box {
+    max-width: 560px;
+    padding: 3.3rem 3rem;
+    border-radius: 26px;
+  }
+
+  .login-box .login-sub { font-size: 1.02rem; margin-bottom: 2.3rem; }
+  .login-box .form-row { margin-bottom: 1.2rem; }
+  .login-box .form-row label { font-size: 0.95rem; }
+  .login-box .form-row input { padding: 0.88rem 1rem; font-size: 1.08rem; }
+  .login-box button.btn { padding: 0.88rem 1.25rem; font-size: 1.06rem; }
+  .login-hint { font-size: 0.88rem; margin-top: 1.7rem; padding-top: 1.35rem; }
+}
+
+/* Poly megali / ultrawide othoni */
+@media (min-width: 1800px) {
+  .login-box {
+    max-width: 640px;
+    padding: 3.8rem 3.5rem;
+  }
+
+  .login-box .login-sub { font-size: 1.1rem; margin-bottom: 2.6rem; }
+  .login-box .form-row { margin-bottom: 1.35rem; }
+  .login-box .form-row label { font-size: 1rem; }
+  .login-box .form-row input { padding: 0.98rem 1.1rem; font-size: 1.15rem; }
+  .login-box button.btn { padding: 0.98rem 1.35rem; font-size: 1.12rem; }
+  .login-hint { font-size: 0.94rem; margin-top: 1.9rem; padding-top: 1.5rem; }
+}
+
+/* Kinito: piani sxedon olo to platos */
+@media (max-width: 520px) {
+  .login-wrapper {
+    padding: 1rem;
+    align-items: flex-start;
+    padding-top: 3rem;
+  }
+
+  .login-box {
+    max-width: 100%;
+    border-radius: 18px;
+  }
+
+  .login-hint {
+    font-size: 0.72rem;
+  }
 }
