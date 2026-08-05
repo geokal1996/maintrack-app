@@ -15,18 +15,22 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Optional;
+import java.time.LocalDateTime;
+import java.util.*;
 
-// Diavazei ena arxeio Excel (.xlsx) kai dimiourgei vlaves (kai proairetika mia
-// energeia sintirisis gia tin kathemia).
+// Diavazei ena arxeio Excel (.xlsx) kai dimiourgei vlaves.
 //
-// Vasiki arxi: MIA proximatiki grammi DEN stamataei olo to import. Kathe grammi
-// elegxetai monh tis - oses einai sostes perhoun, kai gia oses den einai
-// epistrefoume akrivos ti ftaiei kai se poia grammi.
+// YPOSTIRIZEI DYO MORFES, kai anagnorizei MONO TOU poia einai apo tis epikefalides:
+//   1. To diko mas ypodeigma (9 stiles sta ellinika)
+//   2. Export apo ti SAP transaction IW29 (lista gnostopoiiseon syntirisis)
+//
+// Ti PARAMENEI koino kai gia tis dyo morfes: mia proximatiki grammi DEN stamataei
+// olo to import. Kathe grammi elegxetai moni tis - oses einai sostes perhoun, kai
+// gia oses den einai epistrefoume akrivos ti ftaiei kai se poia grammi.
 @Service
 public class FaultImportService {
 
-    // I seira ton stilon sto template mas (0-based)
+    // --- Oi stiles tou DIKOU MAS ypodeigmatos (0-based) ---
     private static final int COL_EXTERNAL_REF = 0;
     private static final int COL_MACHINE_CODE = 1;
     private static final int COL_TITLE = 2;
@@ -70,124 +74,252 @@ public class FaultImportService {
             throw new IllegalArgumentException("Επιτρέπονται μόνο αρχεία .xlsx");
         }
 
+        // Oi mihanes pou "aggixame" - i katastasi tous ypologizetai MIA FORA sto telos.
+        // (An to kanoume se kathe grammi, ena arxeio 1000 grammon kanei xiliades
+        // peritta erotimata sti vasi kai to import argei poly.)
+        Set<Long> touchedMachineIds = new LinkedHashSet<>();
+
         try (InputStream in = file.getInputStream(); Workbook workbook = new XSSFWorkbook(in)) {
             Sheet sheet = workbook.getSheetAt(0);
+            Row headerRow = sheet.getRow(0);
+            if (headerRow == null) {
+                throw new IllegalArgumentException("Το αρχείο δεν έχει γραμμή επικεφαλίδων");
+            }
 
-            // Ksekiname apo ti grammi 1 (i 0 einai oi epikefalides)
+            List<String> headers = readHeaders(headerRow);
+
+            // Anagnorisi morfis. An DEN tairiazei se kammia apo tis dyo gnostes morfes,
+            // stamatame EDO me kathara minima - anti na prospathisoume na diavasoume tis
+            // stiles me ti seira kai na gemisoume tin othoni me akatanoita lathi ana grammi.
+            boolean isSap = SapIw29Mapper.matches(headers);
+            if (!isSap && !matchesOurTemplate(headers)) {
+                throw new IllegalArgumentException(describeUnknownFormat(headers));
+            }
+
             for (int rowIdx = 1; rowIdx <= sheet.getLastRowNum(); rowIdx++) {
                 Row row = sheet.getRow(rowIdx);
-                if (isBlankRow(row)) {
+                if (isBlankRow(row, headers.size())) {
                     continue;
                 }
                 result.setTotalRows(result.getTotalRows() + 1);
+
                 // Sto Excel oi grammes fainontai 1-based, opote +1 gia na tairiazei
                 // me auto pou vlepei o xristis sto arxeio tou.
-                processRow(row, rowIdx + 1, uploadedBy, result);
+                int excelRowNumber = rowIdx + 1;
+
+                ImportRow data;
+                try {
+                    data = isSap ? SapIw29Mapper.map(row, headers) : mapTemplateRow(row);
+                } catch (Exception e) {
+                    result.addError(excelRowNumber, "Η γραμμή δεν μπόρεσε να διαβαστεί");
+                    continue;
+                }
+
+                persistRow(data, excelRowNumber, uploadedBy, isSap, result, touchedMachineIds);
             }
         } catch (IOException e) {
             throw new IllegalArgumentException("Δεν ήταν δυνατή η ανάγνωση του αρχείου Excel");
         }
 
+        touchedMachineIds.forEach(this::recalculateMachineStatus);
         return result;
     }
 
-    private void processRow(Row row, int excelRowNumber, User uploadedBy, ImportResultResponse result) {
-        String externalRef = readString(row, COL_EXTERNAL_REF);
-        String machineCode = readString(row, COL_MACHINE_CODE);
-        String title = readString(row, COL_TITLE);
-        String description = readString(row, COL_DESCRIPTION);
-        String severityText = readString(row, COL_SEVERITY);
-        String statusText = readString(row, COL_STATUS);
-        String technicianUsername = readString(row, COL_TECHNICIAN);
-        String actionDescription = readString(row, COL_ACTION);
-        Integer downtimeMinutes = readInteger(row, COL_DOWNTIME);
+    // ---------------------------------------------------------------
+    //  Apothikefsi - koini kai gia tis dyo morfes arxeiou
+    // ---------------------------------------------------------------
 
-        // --- Elegxoi ---
-        if (machineCode == null) {
-            result.addError(excelRowNumber, "Λείπει ο κωδικός μηχανής");
+    private void persistRow(ImportRow data, int excelRowNumber, User uploadedBy, boolean isSap,
+                             ImportResultResponse result, Set<Long> touchedMachineIds) {
+
+        if (data.skip) {
+            result.setSkipped(result.getSkipped() + 1);
             return;
         }
-        if (title == null) {
+        if (data.machineCode == null) {
+            result.addError(excelRowNumber, "Λείπει ο κωδικός μηχανής / λειτουργικής περιοχής");
+            return;
+        }
+        if (data.title == null) {
             result.addError(excelRowNumber, "Λείπει ο τίτλος της βλάβης");
             return;
         }
 
-        // Idempotency: an exoume idi eisagei auti ti gnostopoiisi, tin prospername.
-        if (externalRef != null && faultRepository.findByExternalRef(externalRef).isPresent()) {
+        // Prostasia apo diplografes: an i idia gnostopoiisi exei idi eisaxthei, tin prospername.
+        if (data.externalRef != null && faultRepository.findByExternalRef(data.externalRef).isPresent()) {
             result.setSkipped(result.getSkipped() + 1);
             return;
         }
 
-        Optional<Machine> machineOpt = machineRepository.findByCode(machineCode);
-        if (machineOpt.isEmpty()) {
-            result.addError(excelRowNumber, "Δεν βρέθηκε μηχανή με κωδικό '" + machineCode + "'");
-            return;
-        }
-        Machine machine = machineOpt.get();
-
-        FaultSeverity severity;
-        try {
-            severity = severityText == null ? FaultSeverity.MEDIUM
-                    : FaultSeverity.valueOf(severityText.toUpperCase());
-        } catch (IllegalArgumentException e) {
-            result.addError(excelRowNumber, "Άγνωστη σοβαρότητα '" + severityText
-                    + "' (επιτρέπονται: LOW, MEDIUM, HIGH, CRITICAL)");
-            return;
-        }
-
-        FaultStatus status;
-        try {
-            status = statusText == null ? FaultStatus.OPEN
-                    : FaultStatus.valueOf(statusText.toUpperCase());
-        } catch (IllegalArgumentException e) {
-            result.addError(excelRowNumber, "Άγνωστη κατάσταση '" + statusText
-                    + "' (επιτρέπονται: OPEN, IN_PROGRESS, RESOLVED, CLOSED)");
+        Optional<Machine> machineOpt = machineRepository.findByCode(data.machineCode);
+        Machine machine;
+        if (machineOpt.isPresent()) {
+            machine = machineOpt.get();
+        } else if (isSap) {
+            // Sto SAP import oi mihanes dimiourgountai automata: to export mas dinei
+            // KAI kodiko (functional location) KAI onoma, opote exoume ó,ti xreiazetai.
+            machine = new Machine(
+                    data.machineCode,
+                    data.machineName != null ? data.machineName : data.machineCode,
+                    data.machineArea,
+                    MachineStatus.OPERATIONAL
+            );
+            machine = machineRepository.save(machine);
+        } else {
+            // Sto diko mas ypodeigma i mihani prepei na yparxei - den exoume onoma
+            // gia na ti dimiourgisoume sosta.
+            result.addError(excelRowNumber, "Δεν βρέθηκε μηχανή με κωδικό '" + data.machineCode + "'");
             return;
         }
 
-        // O texnikos einai proairetikos. An den dothei, xrisimopoioume auton pou anevase to arxeio.
+        // O texnikos einai proairetikos. An to username den antistoixei se xristi mas
+        // (p.x. logariasmoi SAP), xrisimopoioume auton pou anevase to arxeio.
         User technician = uploadedBy;
-        if (technicianUsername != null) {
-            Optional<User> technicianOpt = userRepository.findByUsername(technicianUsername);
-            if (technicianOpt.isEmpty()) {
-                result.addError(excelRowNumber, "Δεν βρέθηκε χρήστης με username '" + technicianUsername + "'");
+        if (data.technicianUsername != null) {
+            Optional<User> found = userRepository.findByUsername(data.technicianUsername);
+            if (found.isPresent()) {
+                technician = found.get();
+            } else if (!isSap) {
+                // Sto diko mas ypodeigma to lathos username einai onto lathos tou xristi
+                result.addError(excelRowNumber,
+                        "Δεν βρέθηκε χρήστης με username '" + data.technicianUsername + "'");
                 return;
             }
-            technician = technicianOpt.get();
         }
 
-        // --- Dimiourgia ---
         Fault fault = new Fault();
         fault.setMachine(machine);
         fault.setReportedBy(technician);
-        fault.setTitle(title);
-        fault.setDescription(description);
-        fault.setSeverity(severity);
-        fault.setStatus(status);
-        fault.setExternalRef(externalRef);
-        if (status == FaultStatus.RESOLVED || status == FaultStatus.CLOSED) {
-            fault.setResolvedAt(java.time.LocalDateTime.now());
+        fault.setTitle(data.title);
+        fault.setDescription(data.description);
+        fault.setSeverity(data.severity != null ? data.severity : FaultSeverity.MEDIUM);
+        fault.setStatus(data.status != null ? data.status : FaultStatus.OPEN);
+        fault.setExternalRef(data.externalRef);
+
+        if (data.resolvedAt != null) {
+            fault.setResolvedAt(data.resolvedAt);
+        } else if (fault.getStatus() == FaultStatus.RESOLVED || fault.getStatus() == FaultStatus.CLOSED) {
+            fault.setResolvedAt(LocalDateTime.now());
         }
+
         Fault savedFault = faultRepository.save(fault);
 
         // An i grammi exei energeia sintirisis i xrono diakopis, ti dimiourgoume kiolas.
-        if (actionDescription != null || downtimeMinutes != null) {
+        if (data.actionDescription != null || data.downtimeMinutes != null) {
             MaintenanceAction action = new MaintenanceAction();
             action.setFault(savedFault);
             action.setTechnician(technician);
-            action.setDescription(actionDescription != null ? actionDescription : "Εισαγωγή από Excel");
-            action.setDowntimeMinutes(downtimeMinutes);
+            action.setDescription(data.actionDescription != null ? data.actionDescription : "Εισαγωγή από Excel");
+            action.setDowntimeMinutes(data.downtimeMinutes);
             maintenanceActionRepository.save(action);
         }
 
-        recalculateMachineStatus(machine);
+        touchedMachineIds.add(machine.getId());
         result.setImported(result.getImported() + 1);
+    }
+
+    // ---------------------------------------------------------------
+    //  Metafrasi grammis apo TO DIKO MAS ypodeigma
+    // ---------------------------------------------------------------
+
+    private ImportRow mapTemplateRow(Row row) {
+        ImportRow d = new ImportRow();
+        d.externalRef = ExcelCells.str(row, COL_EXTERNAL_REF);
+        d.machineCode = ExcelCells.str(row, COL_MACHINE_CODE);
+        d.title = ExcelCells.str(row, COL_TITLE);
+        d.description = ExcelCells.str(row, COL_DESCRIPTION);
+        d.technicianUsername = ExcelCells.str(row, COL_TECHNICIAN);
+        d.actionDescription = ExcelCells.str(row, COL_ACTION);
+        d.downtimeMinutes = ExcelCells.integer(row, COL_DOWNTIME);
+
+        String severityText = ExcelCells.str(row, COL_SEVERITY);
+        if (severityText != null) {
+            try {
+                d.severity = FaultSeverity.valueOf(severityText.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                throw new IllegalArgumentException("Άγνωστη σοβαρότητα '" + severityText
+                        + "' (επιτρέπονται: LOW, MEDIUM, HIGH, CRITICAL)");
+            }
+        }
+
+        String statusText = ExcelCells.str(row, COL_STATUS);
+        if (statusText != null) {
+            try {
+                d.status = FaultStatus.valueOf(statusText.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                throw new IllegalArgumentException("Άγνωστη κατάσταση '" + statusText
+                        + "' (επιτρέπονται: OPEN, IN_PROGRESS, RESOLVED, CLOSED)");
+            }
+        }
+
+        return d;
+    }
+
+    // ---------------------------------------------------------------
+    //  Voithitikes
+    // ---------------------------------------------------------------
+
+    private List<String> readHeaders(Row headerRow) {
+        List<String> headers = new ArrayList<>();
+        for (int c = 0; c < headerRow.getLastCellNum(); c++) {
+            String h = ExcelCells.str(headerRow, c);
+            headers.add(h != null ? h : "");
+        }
+        return headers;
+    }
+
+    // Anagnorizei to DIKO MAS ypodeigma. Den apaitoume na yparxoun OLES oi stiles -
+    // arkoun oi dyo ypoxreotikes (kodikos mihanis kai titlos vlavis).
+    private boolean matchesOurTemplate(List<String> headers) {
+        Set<String> normalized = new HashSet<>();
+        for (String h : headers) {
+            normalized.add(normalizeHeader(h));
+        }
+        return normalized.contains(normalizeHeader(HEADERS[COL_MACHINE_CODE]))
+                && normalized.contains(normalizeHeader(HEADERS[COL_TITLE]));
+    }
+
+    private String normalizeHeader(String header) {
+        return header == null ? "" : header.toLowerCase().replaceAll("[\\s.]", "");
+    }
+
+    // Xtizei ena minima pou leei ston xristi TI VRIKAME kai TI PERIMENAME,
+    // oste na katalavei amesos giati aporrifthike to arxeio tou.
+    private String describeUnknownFormat(List<String> headers) {
+        String found = headers.stream()
+                .filter(h -> h != null && !h.isBlank())
+                .limit(12)
+                .collect(java.util.stream.Collectors.joining(", "));
+
+        return "Δεν αναγνωρίστηκε η μορφή του αρχείου."
+                + " Βρέθηκαν οι στήλες: " + (found.isBlank() ? "(καμία)" : found) + "."
+                + " Απαιτείται είτε το υπόδειγμα του Maintrack (στήλες «"
+                + HEADERS[COL_MACHINE_CODE] + "» και «" + HEADERS[COL_TITLE]
+                + "» — κατέβασέ το από το κουμπί «Κατέβασε υπόδειγμα»),"
+                + " είτε export γνωστοποιήσεων από SAP IW29 (στήλες «Notification» και"
+                + " «FLoc. affected» ή «Equipment»).";
+    }
+
+    private boolean isBlankRow(Row row, int columnCount) {
+        if (row == null) {
+            return true;
+        }
+        for (int i = 0; i < Math.max(columnCount, COL_DOWNTIME + 1); i++) {
+            if (ExcelCells.str(row, i) != null) {
+                return false;
+            }
+        }
+        return true;
     }
 
     // Idios kanonas me to DataSeeder/FaultService: DOWN an yparxei anoixti sovari vlavi,
     // UNDER_MAINTENANCE an yparxei opoiadipote alli anoixti, alliws OPERATIONAL.
-    private void recalculateMachineStatus(Machine machine) {
-        var faults = faultRepository.findByMachineId(machine.getId());
+    private void recalculateMachineStatus(Long machineId) {
+        Machine machine = machineRepository.findById(machineId).orElse(null);
+        if (machine == null) {
+            return;
+        }
+        List<Fault> faults = faultRepository.findByMachineId(machineId);
 
         boolean hasSeriousOpen = faults.stream().anyMatch(f ->
                 (f.getStatus() == FaultStatus.OPEN || f.getStatus() == FaultStatus.IN_PROGRESS)
@@ -205,7 +337,9 @@ public class FaultImportService {
         }
     }
 
-    // ---------- Dimiourgia tou ypodeigmatos (template) ----------
+    // ---------------------------------------------------------------
+    //  Dimiourgia tou ypodeigmatos (template)
+    // ---------------------------------------------------------------
 
     public byte[] buildTemplate() {
         try (Workbook workbook = new XSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream()) {
@@ -254,53 +388,6 @@ public class FaultImportService {
             return out.toByteArray();
         } catch (IOException e) {
             throw new IllegalStateException("Δεν ήταν δυνατή η δημιουργία του υποδείγματος");
-        }
-    }
-
-    // ---------- Voithitikes ----------
-
-    private boolean isBlankRow(Row row) {
-        if (row == null) {
-            return true;
-        }
-        for (int i = 0; i <= COL_DOWNTIME; i++) {
-            if (readString(row, i) != null) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    // Diavazei ena kelu san keimeno, anexartita an mesa exei arithmo i keimeno.
-    // Epistrefei null an einai adeio - etsi elegxoume pantou me "== null".
-    private String readString(Row row, int columnIndex) {
-        Cell cell = row.getCell(columnIndex, Row.MissingCellPolicy.RETURN_BLANK_AS_NULL);
-        if (cell == null) {
-            return null;
-        }
-        String value;
-        if (cell.getCellType() == CellType.NUMERIC) {
-            double numeric = cell.getNumericCellValue();
-            // An einai akeraios (p.x. arithmos gnostopoiisis) na min grafei "1.0E7"
-            value = numeric == Math.floor(numeric)
-                    ? String.valueOf((long) numeric)
-                    : String.valueOf(numeric);
-        } else {
-            value = cell.toString();
-        }
-        value = value.trim();
-        return value.isEmpty() ? null : value;
-    }
-
-    private Integer readInteger(Row row, int columnIndex) {
-        String text = readString(row, columnIndex);
-        if (text == null) {
-            return null;
-        }
-        try {
-            return (int) Double.parseDouble(text);
-        } catch (NumberFormatException e) {
-            return null;
         }
     }
 }
