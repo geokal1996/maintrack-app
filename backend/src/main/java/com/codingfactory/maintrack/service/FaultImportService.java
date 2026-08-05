@@ -1,5 +1,7 @@
 package com.codingfactory.maintrack.service;
 
+import com.codingfactory.maintrack.dto.ColumnMappingRequest;
+import com.codingfactory.maintrack.dto.ImportPreviewResponse;
 import com.codingfactory.maintrack.dto.ImportResultResponse;
 import com.codingfactory.maintrack.model.*;
 import com.codingfactory.maintrack.repository.FaultRepository;
@@ -62,10 +64,63 @@ public class FaultImportService {
         this.maintenanceActionRepository = maintenanceActionRepository;
     }
 
-    @Transactional
-    public ImportResultResponse importFromExcel(MultipartFile file, User uploadedBy) {
-        ImportResultResponse result = new ImportResultResponse();
+    // ---------------------------------------------------------------
+    //  1o VIMA: "Ti exei mesa auto to arxeio;"
+    //  Kaleitai MOLIS o xristis dialexei arxeio, PRIN kanei eisagogi.
+    // ---------------------------------------------------------------
 
+    public ImportPreviewResponse inspect(MultipartFile file) {
+        validateFile(file);
+        ImportPreviewResponse preview = new ImportPreviewResponse();
+
+        try (InputStream in = file.getInputStream(); Workbook workbook = new XSSFWorkbook(in)) {
+            Sheet sheet = workbook.getSheetAt(0);
+            Row headerRow = sheet.getRow(0);
+            if (headerRow == null) {
+                throw new IllegalArgumentException("Το αρχείο δεν έχει γραμμή επικεφαλίδων");
+            }
+
+            List<String> headers = readHeaders(headerRow);
+            preview.setHeaders(headers);
+
+            if (SapIw29Mapper.matches(headers)) {
+                preview.setDetectedFormat("SAP_IW29");
+            } else if (matchesOurTemplate(headers)) {
+                preview.setDetectedFormat("MAINTRACK_TEMPLATE");
+            } else {
+                preview.setDetectedFormat("UNKNOWN");
+            }
+
+            // Deigma apo tis protes grammes, gia na dei o xristis ti periexei kathe stili
+            List<List<String>> sample = new ArrayList<>();
+            int counted = 0;
+            for (int r = 1; r <= sheet.getLastRowNum(); r++) {
+                Row row = sheet.getRow(r);
+                if (isBlankRow(row, headers.size())) {
+                    continue;
+                }
+                counted++;
+                if (sample.size() < 5) {
+                    List<String> cells = new ArrayList<>();
+                    for (int c = 0; c < headers.size(); c++) {
+                        String v = ExcelCells.str(row, c);
+                        cells.add(v != null ? v : "");
+                    }
+                    sample.add(cells);
+                }
+            }
+            preview.setSampleRows(sample);
+            preview.setTotalRows(counted);
+            preview.setSuggestedMapping(ColumnGuesser.guess(headers));
+
+        } catch (IOException e) {
+            throw new IllegalArgumentException("Δεν ήταν δυνατή η ανάγνωση του αρχείου Excel");
+        }
+
+        return preview;
+    }
+
+    private void validateFile(MultipartFile file) {
         if (file == null || file.isEmpty()) {
             throw new IllegalArgumentException("Δεν στάλθηκε αρχείο");
         }
@@ -73,6 +128,25 @@ public class FaultImportService {
         if (filename == null || !filename.toLowerCase().endsWith(".xlsx")) {
             throw new IllegalArgumentException("Επιτρέπονται μόνο αρχεία .xlsx");
         }
+    }
+
+    // ---------------------------------------------------------------
+    //  2o VIMA: i eisagogi
+    // ---------------------------------------------------------------
+
+    @Transactional
+    public ImportResultResponse importFromExcel(MultipartFile file, User uploadedBy) {
+        return importFromExcel(file, uploadedBy, null);
+    }
+
+    // An dothei "mapping", i antistoixisi erxetai APO TON XRISTI kai to arxeio mporei
+    // na exei opoiadipote onomata stilon. An den dothei, prospathoume na anagnorisoume
+    // moni mas ti morfi (diko mas ypodeigma i SAP IW29).
+    @Transactional
+    public ImportResultResponse importFromExcel(MultipartFile file, User uploadedBy,
+                                                 ColumnMappingRequest mapping) {
+        ImportResultResponse result = new ImportResultResponse();
+        validateFile(file);
 
         // Oi mihanes pou "aggixame" - i katastasi tous ypologizetai MIA FORA sto telos.
         // (An to kanoume se kathe grammi, ena arxeio 1000 grammon kanei xiliades
@@ -88,13 +162,26 @@ public class FaultImportService {
 
             List<String> headers = readHeaders(headerRow);
 
-            // Anagnorisi morfis. An DEN tairiazei se kammia apo tis dyo gnostes morfes,
-            // stamatame EDO me kathara minima - anti na prospathisoume na diavasoume tis
-            // stiles me ti seira kai na gemisoume tin othoni me akatanoita lathi ana grammi.
-            boolean isSap = SapIw29Mapper.matches(headers);
-            if (!isSap && !matchesOurTemplate(headers)) {
-                throw new IllegalArgumentException(describeUnknownFormat(headers));
+            boolean isSap = false;
+            boolean useCustomMapping = mapping != null && mapping.getMachineCode() != null
+                    && mapping.getTitle() != null;
+
+            if (!useCustomMapping) {
+                // Anagnorisi morfis. An DEN tairiazei se kammia apo tis dyo gnostes morfes,
+                // stamatame EDO me kathara minima - anti na prospathisoume na diavasoume tis
+                // stiles me ti seira kai na gemisoume tin othoni me akatanoita lathi ana grammi.
+                isSap = SapIw29Mapper.matches(headers);
+                if (!isSap && !matchesOurTemplate(headers)) {
+                    throw new IllegalArgumentException(describeUnknownFormat(headers));
+                }
             }
+
+            // Otan i antistoixisi erxetai apo ton xristi, i dimiourgia mihanon einai
+            // diki tou apofasi (checkbox sto frontend).
+            boolean allowMachineCreation = useCustomMapping ? mapping.isCreateMissingMachines() : isSap;
+            // Mono sto DIKO MAS ypodeigma theoroume lathos ena agnosto username -
+            // se arxeia allon systimaton ta usernames einai fysiologika diaforetika.
+            boolean strictUsernames = !useCustomMapping && !isSap;
 
             for (int rowIdx = 1; rowIdx <= sheet.getLastRowNum(); rowIdx++) {
                 Row row = sheet.getRow(rowIdx);
@@ -109,13 +196,23 @@ public class FaultImportService {
 
                 ImportRow data;
                 try {
-                    data = isSap ? SapIw29Mapper.map(row, headers) : mapTemplateRow(row);
+                    if (useCustomMapping) {
+                        data = mapWithUserMapping(row, mapping);
+                    } else if (isSap) {
+                        data = SapIw29Mapper.map(row, headers);
+                    } else {
+                        data = mapTemplateRow(row);
+                    }
+                } catch (IllegalArgumentException e) {
+                    result.addError(excelRowNumber, e.getMessage());
+                    continue;
                 } catch (Exception e) {
                     result.addError(excelRowNumber, "Η γραμμή δεν μπόρεσε να διαβαστεί");
                     continue;
                 }
 
-                persistRow(data, excelRowNumber, uploadedBy, isSap, result, touchedMachineIds);
+                persistRow(data, excelRowNumber, uploadedBy, allowMachineCreation, strictUsernames,
+                        result, touchedMachineIds);
             }
         } catch (IOException e) {
             throw new IllegalArgumentException("Δεν ήταν δυνατή η ανάγνωση του αρχείου Excel");
@@ -129,7 +226,11 @@ public class FaultImportService {
     //  Apothikefsi - koini kai gia tis dyo morfes arxeiou
     // ---------------------------------------------------------------
 
-    private void persistRow(ImportRow data, int excelRowNumber, User uploadedBy, boolean isSap,
+    // allowMachineCreation = na dimiourgountai automata oi mihanes pou den yparxoun
+    // strictUsernames    = an ena agnosto username einai lathos (diko mas ypodeigma)
+    //                      i apla to agnooume (arxeia apo alla systimata)
+    private void persistRow(ImportRow data, int excelRowNumber, User uploadedBy,
+                             boolean allowMachineCreation, boolean strictUsernames,
                              ImportResultResponse result, Set<Long> touchedMachineIds) {
 
         if (data.skip) {
@@ -155,9 +256,8 @@ public class FaultImportService {
         Machine machine;
         if (machineOpt.isPresent()) {
             machine = machineOpt.get();
-        } else if (isSap) {
-            // Sto SAP import oi mihanes dimiourgountai automata: to export mas dinei
-            // KAI kodiko (functional location) KAI onoma, opote exoume ó,ti xreiazetai.
+        } else if (allowMachineCreation) {
+            // Dimiourgia sti stigmi: exoume kodiko, kai (an dothike) onoma kai perioxi.
             machine = new Machine(
                     data.machineCode,
                     data.machineName != null ? data.machineName : data.machineCode,
@@ -166,8 +266,6 @@ public class FaultImportService {
             );
             machine = machineRepository.save(machine);
         } else {
-            // Sto diko mas ypodeigma i mihani prepei na yparxei - den exoume onoma
-            // gia na ti dimiourgisoume sosta.
             result.addError(excelRowNumber, "Δεν βρέθηκε μηχανή με κωδικό '" + data.machineCode + "'");
             return;
         }
@@ -179,7 +277,7 @@ public class FaultImportService {
             Optional<User> found = userRepository.findByUsername(data.technicianUsername);
             if (found.isPresent()) {
                 technician = found.get();
-            } else if (!isSap) {
+            } else if (strictUsernames) {
                 // Sto diko mas ypodeigma to lathos username einai onto lathos tou xristi
                 result.addError(excelRowNumber,
                         "Δεν βρέθηκε χρήστης με username '" + data.technicianUsername + "'");
@@ -216,6 +314,76 @@ public class FaultImportService {
 
         touchedMachineIds.add(machine.getId());
         result.setImported(result.getImported() + 1);
+    }
+
+    // ---------------------------------------------------------------
+    //  Metafrasi grammis me tin antistoixisi POU EDOSE O XRISTIS
+    // ---------------------------------------------------------------
+
+    private ImportRow mapWithUserMapping(Row row, ColumnMappingRequest m) {
+        ImportRow d = new ImportRow();
+
+        d.externalRef = ExcelCells.str(row, orNeg(m.getExternalRef()));
+        d.machineCode = ExcelCells.str(row, orNeg(m.getMachineCode()));
+        d.machineName = ExcelCells.str(row, orNeg(m.getMachineName()));
+        d.title = ExcelCells.str(row, orNeg(m.getTitle()));
+        d.description = ExcelCells.str(row, orNeg(m.getDescription()));
+        d.technicianUsername = ExcelCells.str(row, orNeg(m.getTechnician()));
+        d.actionDescription = ExcelCells.str(row, orNeg(m.getAction()));
+
+        // Xronos diakopis - me metatropi an to arxeio dinei ores
+        Double raw = ExcelCells.number(row, orNeg(m.getDowntime()));
+        if (raw != null && raw > 0) {
+            double minutes = "HOURS".equalsIgnoreCase(m.getDowntimeUnit()) ? raw * 60 : raw;
+            d.downtimeMinutes = (int) Math.round(minutes);
+        }
+
+        // Sovarotita: dexomaste kai ta dika mas onomata (LOW/MEDIUM/...) kai
+        // arithmitiki proteraiotita typou SAP (1 = pio sovari).
+        d.severity = parseSeverity(ExcelCells.str(row, orNeg(m.getSeverity())));
+
+        // Katastasi: dexomaste ta dika mas onomata kai tous kodikous SAP
+        d.status = parseStatus(ExcelCells.str(row, orNeg(m.getStatus())));
+
+        return d;
+    }
+
+    private int orNeg(Integer index) {
+        return index != null ? index : -1;
+    }
+
+    private FaultSeverity parseSeverity(String text) {
+        if (text == null || text.isBlank()) {
+            return FaultSeverity.MEDIUM;
+        }
+        String t = text.trim().toUpperCase();
+        for (FaultSeverity s : FaultSeverity.values()) {
+            if (t.startsWith(s.name())) {
+                return s;
+            }
+        }
+        return switch (t.charAt(0)) {
+            case '1' -> FaultSeverity.CRITICAL;
+            case '2' -> FaultSeverity.HIGH;
+            case '3' -> FaultSeverity.MEDIUM;
+            case '4' -> FaultSeverity.LOW;
+            default -> FaultSeverity.MEDIUM;
+        };
+    }
+
+    private FaultStatus parseStatus(String text) {
+        if (text == null || text.isBlank()) {
+            return FaultStatus.OPEN;
+        }
+        String t = text.trim().toUpperCase();
+        for (FaultStatus s : FaultStatus.values()) {
+            if (t.contains(s.name())) {
+                return s;
+            }
+        }
+        if (t.contains("NOCO")) return FaultStatus.CLOSED;
+        if (t.contains("NOPR")) return FaultStatus.IN_PROGRESS;
+        return FaultStatus.OPEN;
     }
 
     // ---------------------------------------------------------------

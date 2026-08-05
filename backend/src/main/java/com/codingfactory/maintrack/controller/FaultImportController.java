@@ -1,10 +1,13 @@
 package com.codingfactory.maintrack.controller;
 
+import com.codingfactory.maintrack.dto.ColumnMappingRequest;
+import com.codingfactory.maintrack.dto.ImportPreviewResponse;
 import com.codingfactory.maintrack.dto.ImportResultResponse;
 import com.codingfactory.maintrack.exception.ResourceNotFoundException;
 import com.codingfactory.maintrack.model.User;
 import com.codingfactory.maintrack.repository.UserRepository;
 import com.codingfactory.maintrack.service.FaultImportService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpHeaders;
@@ -22,16 +25,38 @@ public class FaultImportController {
 
     private final FaultImportService faultImportService;
     private final UserRepository userRepository;
+    private final ObjectMapper objectMapper;
 
-    public FaultImportController(FaultImportService faultImportService, UserRepository userRepository) {
+    public FaultImportController(FaultImportService faultImportService, UserRepository userRepository,
+                                  ObjectMapper objectMapper) {
         this.faultImportService = faultImportService;
         this.userRepository = userRepository;
+        this.objectMapper = objectMapper;
     }
 
-    // Anevasma arxeiou. To dikaioma (SUPERVISOR/MANAGER) orizetai sto SecurityConfig.
+    // 1o vima: "ti exei mesa auto to arxeio;" - epistrefei tis stiles tou, ena deigma
+    // ton protwn grammon kai mia protasi antistoixisis. Den apothikevei TIPOTA.
+    @PostMapping(value = "/inspect", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ImportPreviewResponse inspect(@RequestParam("file") MultipartFile file) {
+        return faultImportService.inspect(file);
+    }
+
+    // 2o vima: i eisagogi. To "mapping" einai PROAIRETIKO - an dothei, i antistoixisi
+    // ton stilon erxetai apo ton xristi· an leipei, prospathoume na anagnorisoume
+    // moni mas ti morfi (diko mas ypodeigma i SAP IW29).
+    // To dikaioma (SUPERVISOR/MANAGER) orizetai sto SecurityConfig.
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ImportResultResponse importFaults(@RequestParam("file") MultipartFile file) {
-        return faultImportService.importFromExcel(file, getCurrentUser());
+    public ImportResultResponse importFaults(@RequestParam("file") MultipartFile file,
+                                              @RequestParam(value = "mapping", required = false) String mappingJson) {
+        ColumnMappingRequest mapping = null;
+        if (mappingJson != null && !mappingJson.isBlank()) {
+            try {
+                mapping = objectMapper.readValue(mappingJson, ColumnMappingRequest.class);
+            } catch (Exception e) {
+                throw new IllegalArgumentException("Η αντιστοίχιση στηλών δεν είναι έγκυρη");
+            }
+        }
+        return faultImportService.importFromExcel(file, getCurrentUser(), mapping);
     }
 
     // Katevasma tou ypodeigmatos, gia na kserei o xristis ti stiles perimenoume.

@@ -10,11 +10,18 @@ import {
   HelpCircle,
   ChevronDown,
   ChevronRight,
+  Loader2,
+  Sliders,
+  X,
 } from "lucide-react";
-import { importFaultsFromExcel, downloadImportTemplate } from "../api/importApi";
+import {
+  inspectExcel,
+  importFaultsFromExcel,
+  downloadImportTemplate,
+} from "../api/importApi";
+import ColumnMapper, { MAPPABLE_FIELDS } from "./ColumnMapper";
 
-// Ti stiles perimenei i kathe morfi. Emfanizetai sto ptyssomeno panel odigion,
-// oste o xristis na kserei ek ton proteron pos prepei na einai to arxeio tou.
+// Ti stiles perimenei i kathe gnosti morfi. Emfanizetai sto ptyssomeno panel odigion.
 const TEMPLATE_COLUMNS = [
   { name: "Αρ. Γνωστοποίησης", required: false, note: "μοναδικός κωδικός — αποτρέπει διπλοεγγραφές σε δεύτερο ανέβασμα" },
   { name: "Κωδικός Μηχανής", required: true, note: "πρέπει να αντιστοιχεί σε υπάρχουσα μηχανή" },
@@ -39,6 +46,12 @@ const SAP_COLUMNS = [
   { name: "Completn date", required: false, note: "ημερομηνία επίλυσης" },
   { name: "Reported by / Created By", required: false, note: "τεχνικός" },
 ];
+
+const FORMAT_LABELS = {
+  MAINTRACK_TEMPLATE: "Υπόδειγμα Maintrack",
+  SAP_IW29: "Export από SAP (IW29)",
+  UNKNOWN: "Άγνωστη μορφή",
+};
 
 function ColumnTable({ title, subtitle, columns }) {
   return (
@@ -79,22 +92,63 @@ function ColumnTable({ title, subtitle, columns }) {
 // Emfanizetai mono se SUPERVISOR/MANAGER (to elegxei i selida pou to kalei).
 export default function ExcelImportPanel({ onImported }) {
   const [file, setFile] = useState(null);
+  const [inspecting, setInspecting] = useState(false);
+  const [preview, setPreview] = useState(null);
+  const [mapping, setMapping] = useState(null);
+  const [showMapper, setShowMapper] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [result, setResult] = useState(null);
   const [showHelp, setShowHelp] = useState(false);
-  const [formatError, setFormatError] = useState("");
+  const [errorText, setErrorText] = useState("");
   const fileInputRef = useRef(null);
+
+  function reset() {
+    setFile(null);
+    setPreview(null);
+    setMapping(null);
+    setShowMapper(false);
+    setErrorText("");
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  }
+
+  // Molis dialexei arxeio, to steloume gia "anagnorisi" - xoris na apothikefsoume tipota.
+  async function handleFileChosen(chosen) {
+    setFile(chosen);
+    setPreview(null);
+    setMapping(null);
+    setShowMapper(false);
+    setResult(null);
+    setErrorText("");
+    if (!chosen) return;
+
+    setInspecting(true);
+    try {
+      const data = await inspectExcel(chosen);
+      setPreview(data);
+      setMapping(data.suggestedMapping || {});
+      // An den anagnorisame ti morfi, anoigoume amesos tin antistoixisi -
+      // einai o monos tropos na proxorisei o xristis.
+      if (data.detectedFormat === "UNKNOWN") {
+        setShowMapper(true);
+      }
+    } catch (err) {
+      setErrorText(err.response?.data?.message || "Δεν ήταν δυνατή η ανάγνωση του αρχείου");
+    } finally {
+      setInspecting(false);
+    }
+  }
 
   async function handleUpload() {
     if (!file) return;
     setUploading(true);
     setResult(null);
-    setFormatError("");
+    setErrorText("");
     try {
-      const data = await importFaultsFromExcel(file);
+      // Stelnoume tin antistoixisi MONO an o xristis anoixe to panel -
+      // alliws afinoume to backend na anagnorisei moni tou ti morfi.
+      const data = await importFaultsFromExcel(file, showMapper ? mapping : null);
       setResult(data);
-      setFile(null);
-      if (fileInputRef.current) fileInputRef.current.value = "";
+      reset();
 
       if (data.imported > 0) {
         toast.success(`Εισήχθησαν ${data.imported} βλάβες`);
@@ -108,9 +162,7 @@ export default function ExcelImportPanel({ onImported }) {
     } catch (err) {
       const message = err.response?.data?.message || "Δεν ήταν δυνατή η εισαγωγή του αρχείου";
       toast.error("Το αρχείο δεν έγινε δεκτό");
-      // To minima gia ti morfi einai makry kai xrisimo -> to deixnoume mesa sti
-      // selida (kai anoigoume kai tis odigies), oxi mono se ena toast pou fevgei.
-      setFormatError(message);
+      setErrorText(message);
       setShowHelp(true);
     } finally {
       setUploading(false);
@@ -126,29 +178,17 @@ export default function ExcelImportPanel({ onImported }) {
     }
   }
 
+  const missingRequired =
+    showMapper && mapping
+      ? MAPPABLE_FIELDS.filter((f) => f.required && mapping[f.key] == null)
+      : [];
+  const canImport = file && !uploading && !inspecting && missingRequired.length === 0;
+
   const stats = result
     ? [
-        {
-          icon: CheckCircle2,
-          value: result.imported,
-          label: "Εισήχθησαν",
-          color: "var(--success)",
-          soft: "var(--success-soft)",
-        },
-        {
-          icon: SkipForward,
-          value: result.skipped,
-          label: "Υπήρχαν ήδη",
-          color: "var(--warning)",
-          soft: "var(--warning-soft)",
-        },
-        {
-          icon: XCircle,
-          value: result.failed,
-          label: "Με σφάλμα",
-          color: "var(--danger)",
-          soft: "var(--danger-soft)",
-        },
+        { icon: CheckCircle2, value: result.imported, label: "Εισήχθησαν", color: "var(--success)", soft: "var(--success-soft)" },
+        { icon: SkipForward, value: result.skipped, label: "Υπήρχαν ήδη", color: "var(--warning)", soft: "var(--warning-soft)" },
+        { icon: XCircle, value: result.failed, label: "Με σφάλμα", color: "var(--danger)", soft: "var(--danger-soft)" },
       ]
     : [];
 
@@ -158,10 +198,8 @@ export default function ExcelImportPanel({ onImported }) {
         <FileSpreadsheet size={17} /> Εισαγωγή από Excel
       </h2>
       <p className="muted" style={{ marginTop: 0 }}>
-        Ανέβασε αρχείο <strong>.xlsx</strong> — είτε με τις στήλες του υποδείγματος, είτε
-        απευθείας export γνωστοποιήσεων από <strong>SAP (IW29)</strong>. Η μορφή αναγνωρίζεται
-        αυτόματα. Οι σωστές γραμμές εισάγονται· όσες έχουν πρόβλημα αναφέρονται παρακάτω
-        χωρίς να μπλοκάρουν τις υπόλοιπες.
+        Ανέβασε <strong>οποιοδήποτε</strong> αρχείο .xlsx. Αν είναι υπόδειγμα Maintrack ή export
+        από SAP (IW29), αναγνωρίζεται αυτόματα. Αλλιώς θα σε ρωτήσω τι είναι κάθε στήλη.
       </p>
 
       <div className="filters-row" style={{ marginBottom: 0 }}>
@@ -169,10 +207,10 @@ export default function ExcelImportPanel({ onImported }) {
           ref={fileInputRef}
           type="file"
           accept=".xlsx"
-          onChange={(e) => setFile(e.target.files[0] || null)}
+          onChange={(e) => handleFileChosen(e.target.files[0] || null)}
         />
-        <button className="btn" onClick={handleUpload} disabled={!file || uploading}>
-          <Upload size={15} />
+        <button className="btn" onClick={handleUpload} disabled={!canImport}>
+          {uploading ? <Loader2 size={15} /> : <Upload size={15} />}
           {uploading ? "Γίνεται εισαγωγή..." : "Εισαγωγή"}
         </button>
         <button className="btn secondary" onClick={handleDownloadTemplate}>
@@ -186,38 +224,73 @@ export default function ExcelImportPanel({ onImported }) {
         </button>
       </div>
 
-      {formatError && (
+      {inspecting && (
+        <p className="muted" style={{ marginTop: "0.9rem" }}>
+          Διαβάζω τις στήλες του αρχείου...
+        </p>
+      )}
+
+      {errorText && (
         <p className="error-text" style={{ alignItems: "flex-start", lineHeight: 1.5 }}>
           <XCircle size={16} style={{ flexShrink: 0, marginTop: 2 }} />
-          <span>{formatError}</span>
+          <span>{errorText}</span>
         </p>
+      )}
+
+      {/* Anagnorisi morfis + diakoptis gia xeirokiniti antistoixisi */}
+      {preview && (
+        <div className="filters-row" style={{ marginTop: "1rem", marginBottom: 0, alignItems: "center" }}>
+          <span
+            className="badge dot"
+            style={
+              preview.detectedFormat === "UNKNOWN"
+                ? { background: "var(--warning-soft)", color: "var(--warning)" }
+                : { background: "var(--success-soft)", color: "var(--success)" }
+            }
+          >
+            {FORMAT_LABELS[preview.detectedFormat]}
+          </span>
+          <span className="muted">
+            {preview.headers.length} στήλες · {preview.totalRows} γραμμές
+          </span>
+          {preview.detectedFormat !== "UNKNOWN" && (
+            <button className="btn ghost small" onClick={() => setShowMapper((s) => !s)}>
+              {showMapper ? <X size={14} /> : <Sliders size={14} />}
+              {showMapper ? "Ακύρωση χειροκίνητης αντιστοίχισης" : "Άλλαξε την αντιστοίχιση"}
+            </button>
+          )}
+        </div>
+      )}
+
+      {showMapper && preview && mapping && (
+        <ColumnMapper
+          preview={preview}
+          mapping={mapping}
+          onChange={setMapping}
+          autoDetected={preview.detectedFormat !== "UNKNOWN"}
+        />
       )}
 
       {showHelp && (
         <>
           <div className="divider" />
           <p className="muted" style={{ marginTop: 0 }}>
-            Η εφαρμογή αναγνωρίζει τη μορφή του αρχείου από τα <strong>ονόματα των επικεφαλίδων</strong>
-            {" "}στην πρώτη γραμμή — όχι από τη σειρά τους. Αρκεί να υπάρχουν οι υποχρεωτικές στήλες·
-            οι υπόλοιπες είναι προαιρετικές και μπορούν να λείπουν εντελώς.
+            Η εφαρμογή αναγνωρίζει τη μορφή από τα <strong>ονόματα των επικεφαλίδων</strong> στην
+            πρώτη γραμμή. Αν το αρχείο σου δεν ταιριάζει σε καμία από τις παρακάτω μορφές, δεν
+            πειράζει — θα σου ζητήσει να αντιστοιχίσεις μόνος σου τις στήλες.
           </p>
 
           <ColumnTable
             title="Μορφή 1 — Υπόδειγμα Maintrack"
-            subtitle="Για χειροκίνητη καταχώρηση. Κατέβασε το έτοιμο αρχείο από το κουμπί «Κατέβασε υπόδειγμα» και συμπλήρωσέ το."
+            subtitle="Για χειροκίνητη καταχώρηση. Κατέβασε το έτοιμο αρχείο και συμπλήρωσέ το."
             columns={TEMPLATE_COLUMNS}
           />
 
           <ColumnTable
             title="Μορφή 2 — Export από SAP (IW29)"
-            subtitle="Λίστα γνωστοποιήσεων συντήρησης. Ανέβασε το αρχείο όπως βγαίνει από το SAP, χωρίς επεξεργασία. Οι μηχανές που δεν υπάρχουν δημιουργούνται αυτόματα."
+            subtitle="Λίστα γνωστοποιήσεων συντήρησης, όπως βγαίνει από το SAP χωρίς επεξεργασία. Οι μηχανές που δεν υπάρχουν δημιουργούνται αυτόματα."
             columns={SAP_COLUMNS}
           />
-
-          <p className="muted" style={{ marginBottom: 0 }}>
-            <strong>Αν το αρχείο σου έχει άλλα ονόματα στηλών:</strong> μετονόμασε τις επικεφαλίδες
-            ώστε να ταιριάζουν με μία από τις δύο μορφές, ή αντίγραψε τα δεδομένα σου στο υπόδειγμα.
-          </p>
         </>
       )}
 
@@ -241,9 +314,7 @@ export default function ExcelImportPanel({ onImported }) {
                   <Icon size={20} />
                 </div>
                 <div>
-                  <div className="value" style={{ fontSize: "1.55rem" }}>
-                    {value}
-                  </div>
+                  <div className="value" style={{ fontSize: "1.55rem" }}>{value}</div>
                   <div className="label">{label}</div>
                 </div>
               </div>
