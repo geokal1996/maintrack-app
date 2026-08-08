@@ -4,6 +4,7 @@ import com.codingfactory.maintrack.model.Fault;
 import com.codingfactory.maintrack.model.FaultStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -50,4 +51,23 @@ public interface FaultRepository extends JpaRepository<Fault, Long> {
                         @Param("assignedToUserId") Long assignedToUserId,
                         @Param("q") String q,
                         Pageable pageable);
+
+    // I IDIA anazitisi, alla XORIS selidopoiisi - gia tin eksagogi se Excel.
+    // To arxeio prepei na exei OLES tis eggrafes pou tairiazoun sta filtra,
+    // oxi mono tin selida pou vlepei i othoni.
+    @Query("""
+            select f from Fault f
+            where (:status is null or f.status = :status)
+              and (:machineId is null or f.machine.id = :machineId)
+              and (:assignedToUserId is null or f.assignedTo.id = :assignedToUserId)
+              and (:q is null
+                   or lower(f.title) like lower(concat('%', cast(:q as string), '%'))
+                   or lower(f.machine.code) like lower(concat('%', cast(:q as string), '%'))
+                   or lower(f.machine.name) like lower(concat('%', cast(:q as string), '%')))
+            """)
+    List<Fault> searchAll(@Param("status") FaultStatus status,
+                           @Param("machineId") Long machineId,
+                           @Param("assignedToUserId") Long assignedToUserId,
+                           @Param("q") String q,
+                           Sort sort);
 }

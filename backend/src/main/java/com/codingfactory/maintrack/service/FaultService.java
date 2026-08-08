@@ -261,6 +261,6 @@ public class FaultService {
 
     public Fault findEntityById(Long id) {
         return faultRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Fault not found with id " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Δεν βρέθηκε βλάβη με id " + id));
     }
 }

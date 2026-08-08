@@ -5,15 +5,42 @@
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
-    { "key": "baseUrl", "value": "http://localhost:8080" },
-    { "key": "managerToken", "value": "" },
-    { "key": "supervisorToken", "value": "" },
-    { "key": "technicianToken", "value": "" },
-    { "key": "technicianUserId", "value": "" },
-    { "key": "machineId", "value": "" },
-    { "key": "existingMachineId", "value": "" },
-    { "key": "faultId", "value": "" },
-    { "key": "userId", "value": "" }
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080"
+    },
+    {
+      "key": "managerToken",
+      "value": ""
+    },
+    {
+      "key": "supervisorToken",
+      "value": ""
+    },
+    {
+      "key": "technicianToken",
+      "value": ""
+    },
+    {
+      "key": "technicianUserId",
+      "value": ""
+    },
+    {
+      "key": "machineId",
+      "value": ""
+    },
+    {
+      "key": "existingMachineId",
+      "value": ""
+    },
+    {
+      "key": "faultId",
+      "value": ""
+    },
+    {
+      "key": "userId",
+      "value": ""
+    }
   ],
   "item": [
     {
@@ -38,13 +65,32 @@
           ],
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"Admin123!\"\n}",
-              "options": { "raw": { "language": "json" } }
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
-            "url": { "raw": "{{baseUrl}}/api/auth/login", "host": ["{{baseUrl}}"], "path": ["api", "auth", "login"] }
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            }
           },
           "response": []
         },
@@ -66,13 +112,32 @@
           ],
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"username\": \"m.nikolaou\",\n  \"password\": \"Manager123!\"\n}",
-              "options": { "raw": { "language": "json" } }
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
-            "url": { "raw": "{{baseUrl}}/api/auth/login", "host": ["{{baseUrl}}"], "path": ["api", "auth", "login"] }
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            }
           },
           "response": []
         },
@@ -95,13 +160,32 @@
           ],
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"username\": \"k.konstantinou\",\n  \"password\": \"Tech123!\"\n}",
-              "options": { "raw": { "language": "json" } }
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
-            "url": { "raw": "{{baseUrl}}/api/auth/login", "host": ["{{baseUrl}}"], "path": ["api", "auth", "login"] }
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            }
           },
           "response": []
         },
@@ -120,13 +204,32 @@
           ],
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"LathosKodikos123\"\n}",
-              "options": { "raw": { "language": "json" } }
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
-            "url": { "raw": "{{baseUrl}}/api/auth/login", "host": ["{{baseUrl}}"], "path": ["api", "auth", "login"] }
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            }
           },
           "response": []
         }
@@ -152,8 +255,22 @@
           ],
           "request": {
             "method": "GET",
-            "header": [{ "key": "Authorization", "value": "Bearer {{managerToken}}" }],
-            "url": { "raw": "{{baseUrl}}/api/machines", "host": ["{{baseUrl}}"], "path": ["api", "machines"] }
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{managerToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/machines",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "machines"
+              ]
+            }
           },
           "response": []
         },
@@ -175,15 +292,34 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{supervisorToken}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{supervisorToken}}"
+              }
             ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"code\": \"POSTMAN-TEST-1\",\n  \"name\": \"Dokimastiki Mihani (Postman)\",\n  \"area\": \"Test\",\n  \"status\": \"OPERATIONAL\"\n}",
-              "options": { "raw": { "language": "json" } }
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
-            "url": { "raw": "{{baseUrl}}/api/machines", "host": ["{{baseUrl}}"], "path": ["api", "machines"] }
+            "url": {
+              "raw": "{{baseUrl}}/api/machines",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "machines"
+              ]
+            }
           },
           "response": []
         },
@@ -192,15 +328,35 @@
           "request": {
             "method": "PUT",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{supervisorToken}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{supervisorToken}}"
+              }
             ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"code\": \"POSTMAN-TEST-1\",\n  \"name\": \"Dokimastiki Mihani (enimeromeni)\",\n  \"area\": \"Test\",\n  \"status\": \"UNDER_MAINTENANCE\"\n}",
-              "options": { "raw": { "language": "json" } }
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
-            "url": { "raw": "{{baseUrl}}/api/machines/{{machineId}}", "host": ["{{baseUrl}}"], "path": ["api", "machines", "{{machineId}}"] }
+            "url": {
+              "raw": "{{baseUrl}}/api/machines/{{machineId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "machines",
+                "{{machineId}}"
+              ]
+            }
           },
           "response": []
         },
@@ -219,8 +375,23 @@
           ],
           "request": {
             "method": "DELETE",
-            "header": [{ "key": "Authorization", "value": "Bearer {{supervisorToken}}" }],
-            "url": { "raw": "{{baseUrl}}/api/machines/{{machineId}}", "host": ["{{baseUrl}}"], "path": ["api", "machines", "{{machineId}}"] }
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{supervisorToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/machines/{{machineId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "machines",
+                "{{machineId}}"
+              ]
+            }
           },
           "response": []
         },
@@ -239,8 +410,23 @@
           ],
           "request": {
             "method": "DELETE",
-            "header": [{ "key": "Authorization", "value": "Bearer {{managerToken}}" }],
-            "url": { "raw": "{{baseUrl}}/api/machines/{{machineId}}", "host": ["{{baseUrl}}"], "path": ["api", "machines", "{{machineId}}"] }
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{managerToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/machines/{{machineId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "machines",
+                "{{machineId}}"
+              ]
+            }
           },
           "response": []
         }
@@ -253,8 +439,22 @@
           "name": "Lista olon ton vlavon (GET)",
           "request": {
             "method": "GET",
-            "header": [{ "key": "Authorization", "value": "Bearer {{managerToken}}" }],
-            "url": { "raw": "{{baseUrl}}/api/faults", "host": ["{{baseUrl}}"], "path": ["api", "faults"] }
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{managerToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/faults",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "faults"
+              ]
+            }
           },
           "response": []
         },
@@ -262,12 +462,27 @@
           "name": "Lista vlavon me filtro status=OPEN (GET)",
           "request": {
             "method": "GET",
-            "header": [{ "key": "Authorization", "value": "Bearer {{managerToken}}" }],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{managerToken}}"
+              }
+            ],
             "url": {
               "raw": "{{baseUrl}}/api/faults?status=OPEN",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "faults"],
-              "query": [{ "key": "status", "value": "OPEN" }]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "faults"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "OPEN"
+                }
+              ]
             }
           },
           "response": []
@@ -291,15 +506,34 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{technicianToken}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{technicianToken}}"
+              }
             ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"machineId\": {{existingMachineId}},\n  \"reportedByUserId\": {{technicianUserId}},\n  \"title\": \"Dokimastiki vlavi (Postman)\",\n  \"description\": \"Auti i vlavi dimiourgithike gia dokimi tou API meso Postman.\",\n  \"severity\": \"MEDIUM\"\n}",
-              "options": { "raw": { "language": "json" } }
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
-            "url": { "raw": "{{baseUrl}}/api/faults", "host": ["{{baseUrl}}"], "path": ["api", "faults"] }
+            "url": {
+              "raw": "{{baseUrl}}/api/faults",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "faults"
+              ]
+            }
           },
           "response": []
         },
@@ -319,15 +553,36 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{technicianToken}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{technicianToken}}"
+              }
             ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"technicianUserId\": {{technicianUserId}},\n  \"description\": \"Elenxos kai dokimi (Postman test)\",\n  \"downtimeMinutes\": 15\n}",
-              "options": { "raw": { "language": "json" } }
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
-            "url": { "raw": "{{baseUrl}}/api/faults/{{faultId}}/actions", "host": ["{{baseUrl}}"], "path": ["api", "faults", "{{faultId}}", "actions"] }
+            "url": {
+              "raw": "{{baseUrl}}/api/faults/{{faultId}}/actions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "faults",
+                "{{faultId}}",
+                "actions"
+              ]
+            }
           },
           "response": []
         },
@@ -348,8 +603,23 @@
           ],
           "request": {
             "method": "GET",
-            "header": [{ "key": "Authorization", "value": "Bearer {{technicianToken}}" }],
-            "url": { "raw": "{{baseUrl}}/api/faults/{{faultId}}", "host": ["{{baseUrl}}"], "path": ["api", "faults", "{{faultId}}"] }
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{technicianToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/faults/{{faultId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "faults",
+                "{{faultId}}"
+              ]
+            }
           },
           "response": []
         },
@@ -369,15 +639,36 @@
           "request": {
             "method": "PATCH",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{technicianToken}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{technicianToken}}"
+              }
             ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"status\": \"CLOSED\"\n}",
-              "options": { "raw": { "language": "json" } }
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
-            "url": { "raw": "{{baseUrl}}/api/faults/{{faultId}}/status", "host": ["{{baseUrl}}"], "path": ["api", "faults", "{{faultId}}", "status"] }
+            "url": {
+              "raw": "{{baseUrl}}/api/faults/{{faultId}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "faults",
+                "{{faultId}}",
+                "status"
+              ]
+            }
           },
           "response": []
         },
@@ -399,15 +690,36 @@
           "request": {
             "method": "PATCH",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{technicianToken}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{technicianToken}}"
+              }
             ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"status\": \"RESOLVED\"\n}",
-              "options": { "raw": { "language": "json" } }
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
-            "url": { "raw": "{{baseUrl}}/api/faults/{{faultId}}/status", "host": ["{{baseUrl}}"], "path": ["api", "faults", "{{faultId}}", "status"] }
+            "url": {
+              "raw": "{{baseUrl}}/api/faults/{{faultId}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "faults",
+                "{{faultId}}",
+                "status"
+              ]
+            }
           },
           "response": []
         },
@@ -429,15 +741,36 @@
           "request": {
             "method": "PATCH",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{technicianToken}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{technicianToken}}"
+              }
             ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"status\": \"CLOSED\"\n}",
-              "options": { "raw": { "language": "json" } }
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
-            "url": { "raw": "{{baseUrl}}/api/faults/{{faultId}}/status", "host": ["{{baseUrl}}"], "path": ["api", "faults", "{{faultId}}", "status"] }
+            "url": {
+              "raw": "{{baseUrl}}/api/faults/{{faultId}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "faults",
+                "{{faultId}}",
+                "status"
+              ]
+            }
           },
           "response": []
         }
@@ -463,8 +796,22 @@
           ],
           "request": {
             "method": "GET",
-            "header": [{ "key": "Authorization", "value": "Bearer {{managerToken}}" }],
-            "url": { "raw": "{{baseUrl}}/api/users", "host": ["{{baseUrl}}"], "path": ["api", "users"] }
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{managerToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/users",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "users"
+              ]
+            }
           },
           "response": []
         },
@@ -483,8 +830,22 @@
           ],
           "request": {
             "method": "GET",
-            "header": [{ "key": "Authorization", "value": "Bearer {{technicianToken}}" }],
-            "url": { "raw": "{{baseUrl}}/api/users", "host": ["{{baseUrl}}"], "path": ["api", "users"] }
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{technicianToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/users",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "users"
+              ]
+            }
           },
           "response": []
         },
@@ -506,15 +867,34 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{supervisorToken}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{supervisorToken}}"
+              }
             ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"username\": \"postman.tech\",\n  \"password\": \"Postman123!\",\n  \"fullName\": \"Postman Test Technician\",\n  \"role\": \"TECHNICIAN\",\n  \"jobTitle\": \"Dokimastikos Texnikos\"\n}",
-              "options": { "raw": { "language": "json" } }
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
-            "url": { "raw": "{{baseUrl}}/api/users", "host": ["{{baseUrl}}"], "path": ["api", "users"] }
+            "url": {
+              "raw": "{{baseUrl}}/api/users",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "users"
+              ]
+            }
           },
           "response": []
         },
@@ -534,15 +914,34 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{supervisorToken}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{supervisorToken}}"
+              }
             ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"username\": \"postman.supervisor\",\n  \"password\": \"Postman123!\",\n  \"fullName\": \"Postman Test Supervisor\",\n  \"role\": \"SUPERVISOR\"\n}",
-              "options": { "raw": { "language": "json" } }
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
-            "url": { "raw": "{{baseUrl}}/api/users", "host": ["{{baseUrl}}"], "path": ["api", "users"] }
+            "url": {
+              "raw": "{{baseUrl}}/api/users",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "users"
+              ]
+            }
           },
           "response": []
         },
@@ -562,15 +961,34 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{managerToken}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{managerToken}}"
+              }
             ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"username\": \"postman.supervisor2\",\n  \"password\": \"Postman123!\",\n  \"fullName\": \"Postman Test Supervisor 2\",\n  \"role\": \"SUPERVISOR\",\n  \"jobTitle\": \"Dokimastikos Proistamenos\"\n}",
-              "options": { "raw": { "language": "json" } }
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
-            "url": { "raw": "{{baseUrl}}/api/users", "host": ["{{baseUrl}}"], "path": ["api", "users"] }
+            "url": {
+              "raw": "{{baseUrl}}/api/users",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "users"
+              ]
+            }
           },
           "response": []
         },
@@ -578,12 +996,29 @@
           "name": "Apenergopoiisi xristi (PATCH active=false)",
           "request": {
             "method": "PATCH",
-            "header": [{ "key": "Authorization", "value": "Bearer {{managerToken}}" }],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{managerToken}}"
+              }
+            ],
             "url": {
               "raw": "{{baseUrl}}/api/users/{{userId}}/active?active=false",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "users", "{{userId}}", "active"],
-              "query": [{ "key": "active", "value": "false" }]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "users",
+                "{{userId}}",
+                "active"
+              ],
+              "query": [
+                {
+                  "key": "active",
+                  "value": "false"
+                }
+              ]
             }
           },
           "response": []
@@ -608,7 +1043,16 @@
           ],
           "request": {
             "method": "GET",
-            "url": { "raw": "{{baseUrl}}/api/machines", "host": ["{{baseUrl}}"], "path": ["api", "machines"] }
+            "url": {
+              "raw": "{{baseUrl}}/api/machines",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "machines"
+              ]
+            }
           },
           "response": []
         },
@@ -627,9 +1071,622 @@
           ],
           "request": {
             "method": "GET",
-            "url": { "raw": "{{baseUrl}}/api/health", "host": ["{{baseUrl}}"], "path": ["api", "health"] }
+            "url": {
+              "raw": "{{baseUrl}}/api/health",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "health"
+              ]
+            }
           },
           "response": []
+        },
+        {
+          "name": "GET anyparkti vlavi -> 404 (ANAMENOMENO)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{managerToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/faults/999999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "faults",
+                "999999"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 404', function () { pm.response.to.have.status(404); });",
+                  "pm.test('To minima einai sta ellinika', function () {",
+                  "    pm.expect(pm.response.json().message).to.include('Δεν βρέθηκε');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "6. Anathesi & Istoriko (Fasi D)",
+      "item": [
+        {
+          "name": "Anathesi vlavis se texniko - SUPERVISOR",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{supervisorToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/faults/{{faultId}}/assignee",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "faults",
+                "{{faultId}}",
+                "assignee"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"{{technicianUserId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('I vlavi exei tora ypeuthino', function () {",
+                  "    pm.expect(pm.response.json().assignedToUserId).to.not.eql(null);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "TECHNICIAN prospathei na anathesei se ALLON -> 403 (ANAMENOMENO)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{technicianToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/faults/{{faultId}}/assignee",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "faults",
+                "{{faultId}}",
+                "assignee"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 403 - o texnikos anathetei mono ston eauto tou', function () { pm.response.to.have.status(403); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Afairesi anathesis (userId = null)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{supervisorToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/faults/{{faultId}}/assignee",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "faults",
+                "{{faultId}}",
+                "assignee"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": null\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('I vlavi einai xoris ypeuthino', function () {",
+                  "    pm.expect(pm.response.json().assignedToUserId).to.eql(null);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Istoriko katastaseon tis vlavis",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{managerToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/faults/{{faultId}}/history",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "faults",
+                "{{faultId}}",
+                "history"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Yparxei toulaxiston i eggrafi dimiourgias', function () {",
+                  "    const h = pm.response.json();",
+                  "    pm.expect(h.length).to.be.above(0);",
+                  "    pm.expect(h[0].fromStatus).to.eql(null);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Filtro: mono oi vlaves pou mou exoun anatethei",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{technicianToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/faults?assignedToUserId={{technicianUserId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "faults"
+              ],
+              "query": [
+                {
+                  "key": "assignedToUserId",
+                  "value": "{{technicianUserId}}"
+                }
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "7. Statistika (Pareto / MTBF / Tasi)",
+      "item": [
+        {
+          "name": "Pareto dashboard (ola ta dedomena)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{managerToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/stats/pareto",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "stats",
+                "pareto"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Ta athroistika pososta einai afxousa kai kleinoun sto 100', function () {",
+                  "    const items = pm.response.json().faultsByMachine;",
+                  "    if (items.length === 0) { return; }",
+                  "    let prev = 0;",
+                  "    items.forEach(function (i) { pm.expect(i.cumulativePercent).to.be.at.least(prev); prev = i.cumulativePercent; });",
+                  "    pm.expect(items[items.length - 1].cumulativePercent).to.be.closeTo(100, 0.2);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Pareto me filtro periodou",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{managerToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/stats/pareto?from=2026-01-01&to=2026-12-31",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "stats",
+                "pareto"
+              ],
+              "query": [
+                {
+                  "key": "from",
+                  "value": "2026-01-01"
+                },
+                {
+                  "key": "to",
+                  "value": "2026-12-31"
+                }
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Deiktes axiopistias (MTBF / MTTR / Diathesimotita)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{managerToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/stats/reliability",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "stats",
+                "reliability"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('An yparxoun MTBF kai MTTR, i diathesimotita einai metaxi 0 kai 100', function () {",
+                  "    const r = pm.response.json();",
+                  "    if (r.availabilityPercent === null) { return; }",
+                  "    pm.expect(r.availabilityPercent).to.be.within(0, 100);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Tasi vlavon ana mina",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{managerToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/stats/trend",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "stats",
+                "trend"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "8. Excel (eisagogi / eksagogi)",
+      "item": [
+        {
+          "name": "Katevasma ypodeigmatos eisagogis",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{supervisorToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/faults/import/template",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "faults",
+                "import",
+                "template"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Einai arxeio Excel', function () {",
+                  "    pm.expect(pm.response.headers.get('Content-Type')).to.include('spreadsheetml');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Eksagogi vlavon se Excel (ola)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{managerToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/faults/export",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "faults",
+                "export"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Erxetai san arxeio pros katevasma', function () {",
+                  "    pm.expect(pm.response.headers.get('Content-Disposition')).to.include('attachment');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Eksagogi MONO ton anoixton vlavon",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{managerToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/faults/export?status=OPEN",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "faults",
+                "export"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "OPEN"
+                }
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "TECHNICIAN prospathei eisagogi -> 403 (ANAMENOMENO)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{technicianToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/faults/import",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "faults",
+                "import"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 403 - i maziki eisagogi einai gia SUPERVISOR/MANAGER', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([403]);",
+                  "});"
+                ]
+              }
+            }
+          ]
         }
       ]
     }

@@ -2,27 +2,36 @@ package com.codingfactory.maintrack.controller;
 
 import com.codingfactory.maintrack.dto.*;
 import com.codingfactory.maintrack.model.FaultStatus;
+import com.codingfactory.maintrack.service.FaultExportService;
 import com.codingfactory.maintrack.service.FaultService;
 import com.codingfactory.maintrack.service.MaintenanceActionService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 
-@Tag(name = "Faults", description = "Katagrafi kai diaxeirisi vlavon")
+@Tag(name = "Faults", description = "Καταγραφή και διαχείριση βλαβών")
 @RestController
 @RequestMapping("/api/faults")
 public class FaultController {
 
     private final FaultService faultService;
     private final MaintenanceActionService maintenanceActionService;
+    private final FaultExportService faultExportService;
 
-    public FaultController(FaultService faultService, MaintenanceActionService maintenanceActionService) {
+    public FaultController(FaultService faultService,
+                            MaintenanceActionService maintenanceActionService,
+                            FaultExportService faultExportService) {
         this.faultService = faultService;
         this.maintenanceActionService = maintenanceActionService;
+        this.faultExportService = faultExportService;
     }
 
     @Operation(summary = "Λίστα βλαβών με σελιδοποίηση",
@@ -86,6 +95,28 @@ public class FaultController {
     @PatchMapping("/{id}/status")
     public FaultResponse updateStatus(@PathVariable Long id, @Valid @RequestBody FaultStatusUpdateRequest request) {
         return faultService.updateStatus(id, request.getStatus());
+    }
+
+    @Operation(summary = "Εξαγωγή βλαβών σε Excel",
+            description = "Κατεβάζει αρχείο .xlsx με τις βλάβες που ταιριάζουν στα ΙΔΙΑ φίλτρα "
+                    + "με το GET /api/faults. Χωρίς σελιδοποίηση — το αρχείο περιέχει όλες τις "
+                    + "εγγραφές που ταιριάζουν, όχι μόνο την τρέχουσα σελίδα.")
+    @GetMapping("/export")
+    public ResponseEntity<byte[]> export(@RequestParam(required = false) FaultStatus status,
+                                          @RequestParam(required = false) Long machineId,
+                                          @RequestParam(required = false) Long assignedToUserId,
+                                          @RequestParam(required = false) String q) {
+        byte[] file = faultExportService.export(status, machineId, assignedToUserId, q);
+        String filename = "maintrack-vlaves-" + LocalDate.now() + ".xlsx";
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(
+                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
+                // Xoris auto to header, o browser (mesw axios/CORS) DEN vlepei to
+                // Content-Disposition kai den mporei na parei to onoma tou arxeiou.
+                .header(HttpHeaders.ACCESS_CONTROL_EXPOSE_HEADERS, HttpHeaders.CONTENT_DISPOSITION)
+                .body(file);
     }
 
     @Operation(summary = "Ανάθεση βλάβης σε τεχνικό",

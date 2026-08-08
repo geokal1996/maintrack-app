@@ -5,7 +5,7 @@ import jakarta.validation.constraints.NotNull;
 
 public class FaultStatusUpdateRequest {
 
-    @NotNull(message = "I nea katastasi einai ipoxreotiki")
+    @NotNull(message = "Η νέα κατάσταση είναι υποχρεωτική")
     private FaultStatus status;
 
     public FaultStatus getStatus() {

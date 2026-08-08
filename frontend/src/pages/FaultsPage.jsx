@@ -11,9 +11,10 @@ import {
   CheckCircle2,
   Search,
   UserCheck,
+  Download,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
-import { searchFaults, createFault } from "../api/faultsApi";
+import { searchFaults, createFault, exportFaults } from "../api/faultsApi";
 import { getMachines } from "../api/machinesApi";
 import ExcelImportPanel from "../components/ExcelImportPanel";
 import Pagination from "../components/Pagination";
@@ -53,6 +54,7 @@ export default function FaultsPage() {
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
+  const [exporting, setExporting] = useState(false);
 
   function loadFaults() {
     setLoading(true);
@@ -106,6 +108,22 @@ export default function FaultsPage() {
       );
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function handleExport() {
+    setExporting(true);
+    try {
+      await exportFaults({
+        status: statusFilter || undefined,
+        assignedToUserId: onlyMine ? user.id : undefined,
+        q: appliedSearch,
+      });
+      toast.success("Το αρχείο κατέβηκε");
+    } catch {
+      toast.error("Δεν ήταν δυνατή η εξαγωγή");
+    } finally {
+      setExporting(false);
     }
   }
 
@@ -239,6 +257,16 @@ export default function FaultsPage() {
             title="Δείχνει μόνο τις βλάβες που έχουν ανατεθεί σε εμένα"
           >
             <UserCheck size={15} /> Ανατεθειμένες σε εμένα
+          </button>
+          <button
+            type="button"
+            className="btn secondary small"
+            style={{ alignSelf: "flex-end" }}
+            onClick={handleExport}
+            disabled={exporting || faults.length === 0}
+            title="Κατεβάζει σε Excel ό,τι δείχνουν τα φίλτρα αυτή τη στιγμή"
+          >
+            <Download size={15} /> {exporting ? "Εξαγωγή..." : "Εξαγωγή σε Excel"}
           </button>
         </div>
 

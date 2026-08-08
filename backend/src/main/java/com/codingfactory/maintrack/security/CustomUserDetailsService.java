@@ -22,7 +22,7 @@ public class CustomUserDetailsService implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
+                .orElseThrow(() -> new UsernameNotFoundException("Δεν βρέθηκε χρήστης με username: " + username));
 
         // Ftiaxnoume ena "UserDetails" (auto pou katalavainei to Spring Security)
         // apo to diko mas User entity. To role ginetai "ROLE_TECHNICIAN" i "ROLE_SUPERVISOR".

@@ -8,9 +8,11 @@ import com.codingfactory.maintrack.repository.FaultStatusChangeRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.access.AccessDeniedException;
 
 import java.util.List;
 import java.util.Optional;
@@ -113,10 +115,15 @@ class FaultServiceTest {
 
     @Test
     void otanIVlaviGineiResolvedIMihaniGyrizeiSeOperationalAnDenExeiAlesAnoixtesVlaves() {
+        // Ksekiname me ti mihani EKTOS LEITOURGIAS - auti einai i realistiki katastasi
+        // otan mia sovari vlavi einai se ekselixi.
+        machine.setStatus(MachineStatus.DOWN);
+
         Fault fault = new Fault();
         fault.setId(5L);
         fault.setMachine(machine);
         fault.setReportedBy(reporter);
+        fault.setSeverity(FaultSeverity.CRITICAL);
         fault.setStatus(FaultStatus.IN_PROGRESS);
 
         when(faultRepository.findById(5L)).thenReturn(Optional.of(fault));
@@ -134,16 +141,20 @@ class FaultServiceTest {
 
     @Test
     void iMihaniDenGyrizeiSeOperationalAnYparxeiKiAlliAnoixtiVlavi() {
+        machine.setStatus(MachineStatus.DOWN);
+
         Fault faultPouKleinei = new Fault();
         faultPouKleinei.setId(5L);
         faultPouKleinei.setMachine(machine);
         faultPouKleinei.setReportedBy(reporter);
+        faultPouKleinei.setSeverity(FaultSeverity.CRITICAL);
         faultPouKleinei.setStatus(FaultStatus.RESOLVED);
 
         Fault alliAnoixtiVlavi = new Fault();
         alliAnoixtiVlavi.setId(6L);
         alliAnoixtiVlavi.setMachine(machine);
         alliAnoixtiVlavi.setReportedBy(reporter);
+        alliAnoixtiVlavi.setSeverity(FaultSeverity.MEDIUM);
         alliAnoixtiVlavi.setStatus(FaultStatus.OPEN);
 
         when(faultRepository.findById(5L)).thenReturn(Optional.of(faultPouKleinei));
@@ -153,7 +164,140 @@ class FaultServiceTest {
         faultService.updateStatus(5L, FaultStatus.CLOSED);
 
         assertThat(faultPouKleinei.getStatus()).isEqualTo(FaultStatus.CLOSED);
-        // I mihani DEN prepei na ginei OPERATIONAL - yparxei akomi i "alliAnoixtiVlavi"
-        verify(machineService, never()).save(any());
+        // To simantiko: i mihani DEN ginetai OPERATIONAL, giati yparxei akomi
+        // i "alliAnoixtiVlavi". Perhaei se "Se sintirisi" - i sovari vlavi ekleise,
+        // alla kati ekremei akoma.
+        assertThat(machine.getStatus()).isEqualTo(MachineStatus.UNDER_MAINTENANCE);
+    }
+
+    // ---------------------------------------------------------------
+    //  Anathesi se texniko
+    // ---------------------------------------------------------------
+
+    @Test
+    void oTexnikosDenMporeiNaAnatheseiVlaviSeAllon() {
+        Fault fault = new Fault();
+        fault.setId(5L);
+        fault.setMachine(machine);
+        fault.setReportedBy(reporter);
+        fault.setStatus(FaultStatus.OPEN);
+
+        when(faultRepository.findById(5L)).thenReturn(Optional.of(fault));
+        when(userService.getCurrentUser()).thenReturn(reporter);          // id = 2
+        when(userService.getCurrentUserRole()).thenReturn(Role.TECHNICIAN);
+
+        // Prospathei na tin anathesei ston xristi 99 - oxi ston eauto tou (2)
+        assertThrows(AccessDeniedException.class, () -> faultService.assign(5L, 99L));
+
+        assertThat(fault.getAssignedTo()).isNull();
+        verify(faultRepository, never()).save(any());
+    }
+
+    @Test
+    void oTexnikosMporeiNaParaeiTiVlaviGiaTonEautoTou() {
+        Fault fault = new Fault();
+        fault.setId(5L);
+        fault.setMachine(machine);
+        fault.setReportedBy(reporter);
+        fault.setStatus(FaultStatus.OPEN);
+
+        when(faultRepository.findById(5L)).thenReturn(Optional.of(fault));
+        when(faultRepository.save(any(Fault.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(userService.getCurrentUser()).thenReturn(reporter);
+        when(userService.getCurrentUserRole()).thenReturn(Role.TECHNICIAN);
+        when(userService.findEntityById(2L)).thenReturn(reporter);
+
+        FaultResponse response = faultService.assign(5L, 2L);
+
+        assertThat(fault.getAssignedTo()).isEqualTo(reporter);
+        assertThat(response.getAssignedToUserId()).isEqualTo(2L);
+    }
+
+    @Test
+    void oProistamenosMporeiNaAnatheseiSeOpoiondipoteEnergoXristi() {
+        User supervisor = new User("proistamenos", "hash", "Δοκιμαστικός Προϊστάμενος", Role.SUPERVISOR);
+        supervisor.setId(3L);
+
+        Fault fault = new Fault();
+        fault.setId(5L);
+        fault.setMachine(machine);
+        fault.setReportedBy(reporter);
+        fault.setStatus(FaultStatus.OPEN);
+
+        when(faultRepository.findById(5L)).thenReturn(Optional.of(fault));
+        when(faultRepository.save(any(Fault.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(userService.getCurrentUser()).thenReturn(supervisor);
+        when(userService.getCurrentUserRole()).thenReturn(Role.SUPERVISOR);
+        when(userService.findEntityById(2L)).thenReturn(reporter);
+
+        faultService.assign(5L, 2L);
+
+        assertThat(fault.getAssignedTo()).isEqualTo(reporter);
+    }
+
+    @Test
+    void denAnatithetaiVlaviSeAnenergoXristi() {
+        User supervisor = new User("proistamenos", "hash", "Δοκιμαστικός Προϊστάμενος", Role.SUPERVISOR);
+        supervisor.setId(3L);
+        reporter.setActive(false);
+
+        Fault fault = new Fault();
+        fault.setId(5L);
+        fault.setMachine(machine);
+        fault.setReportedBy(reporter);
+        fault.setStatus(FaultStatus.OPEN);
+
+        when(faultRepository.findById(5L)).thenReturn(Optional.of(fault));
+        when(userService.getCurrentUser()).thenReturn(supervisor);
+        when(userService.getCurrentUserRole()).thenReturn(Role.SUPERVISOR);
+        when(userService.findEntityById(2L)).thenReturn(reporter);
+
+        assertThrows(IllegalStateException.class, () -> faultService.assign(5L, 2L));
+
+        assertThat(fault.getAssignedTo()).isNull();
+    }
+
+    // ---------------------------------------------------------------
+    //  Istoriko katastaseon
+    // ---------------------------------------------------------------
+
+    @Test
+    void kathAllagiKatastasisKatagrafetaiStoIstoriko() {
+        Fault fault = new Fault();
+        fault.setId(5L);
+        fault.setMachine(machine);
+        fault.setReportedBy(reporter);
+        fault.setStatus(FaultStatus.OPEN);
+
+        when(faultRepository.findById(5L)).thenReturn(Optional.of(fault));
+        when(faultRepository.save(any(Fault.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        faultService.updateStatus(5L, FaultStatus.IN_PROGRESS);
+
+        ArgumentCaptor<FaultStatusChange> captor = ArgumentCaptor.forClass(FaultStatusChange.class);
+        verify(statusChangeRepository).save(captor.capture());
+
+        FaultStatusChange change = captor.getValue();
+        assertThat(change.getFromStatus()).isEqualTo(FaultStatus.OPEN);
+        assertThat(change.getToStatus()).isEqualTo(FaultStatus.IN_PROGRESS);
+        assertThat(change.getFault()).isEqualTo(fault);
+    }
+
+    @Test
+    void anIKatastasiDenAllakseDenGrafetaiEggrafiStoIstoriko() {
+        Fault fault = new Fault();
+        fault.setId(5L);
+        fault.setMachine(machine);
+        fault.setReportedBy(reporter);
+        fault.setStatus(FaultStatus.IN_PROGRESS);
+
+        when(faultRepository.findById(5L)).thenReturn(Optional.of(fault));
+        when(faultRepository.save(any(Fault.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        // Idia katastasi me tin trexousa - to istoriko den prepei na gemisei
+        // me apanoti panomoiotypes grammes.
+        faultService.updateStatus(5L, FaultStatus.IN_PROGRESS);
+
+        verify(statusChangeRepository, never()).save(any());
     }
 }

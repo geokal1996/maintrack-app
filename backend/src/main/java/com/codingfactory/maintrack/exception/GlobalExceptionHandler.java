@@ -80,7 +80,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<ApiError> handleDataIntegrityViolation(DataIntegrityViolationException ex) {
         ApiError error = new ApiError(HttpStatus.CONFLICT.value(),
-                "Ta dedomena pou stalthikan paravazoun periorismo monadikotitas (p.x. to username i o kodikos yparxei idi)");
+                "Τα στοιχεία υπάρχουν ήδη (π.χ. το username ή ο κωδικός μηχανής χρησιμοποιείται από άλλη εγγραφή)");
         return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
     }
 }

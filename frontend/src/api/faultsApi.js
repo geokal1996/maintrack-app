@@ -10,6 +10,34 @@ export function searchFaults({ status, machineId, assignedToUserId, q, page = 0,
   return apiClient.get("/api/faults", { params }).then((res) => res.data);
 }
 
+// Katevazei ta apotelesmata os arxeio Excel, me ta IDIA filtra me ti lista.
+// To "responseType: blob" einai apraitito - xoris auto o axios tha prospathouse
+// na diavasei to binary arxeio san keimeno kai tha to katestrefe.
+export async function exportFaults({ status, machineId, assignedToUserId, q } = {}) {
+  const params = {};
+  if (status) params.status = status;
+  if (machineId) params.machineId = machineId;
+  if (assignedToUserId) params.assignedToUserId = assignedToUserId;
+  if (q && q.trim()) params.q = q.trim();
+
+  const res = await apiClient.get("/api/faults/export", { params, responseType: "blob" });
+
+  // To onoma tou arxeiou erxetai apo to Content-Disposition tou server
+  const disposition = res.headers["content-disposition"] || "";
+  const match = disposition.match(/filename="?([^"]+)"?/);
+  const filename = match ? match[1] : "maintrack-vlaves.xlsx";
+
+  const url = window.URL.createObjectURL(new Blob([res.data]));
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  // Eleftheronoume ti mnimi - alliws to arxeio menei fortomeno sto tab
+  window.URL.revokeObjectURL(url);
+}
+
 // Xoris selidopoiisi - gia mikres listes (p.x. oi anoixtes vlaves sto Dashboard)
 export function getFaults({ status, machineId } = {}) {
   const params = {};

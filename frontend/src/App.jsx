@@ -12,6 +12,7 @@ import FaultDetailPage from "./pages/FaultDetailPage";
 import UsersPage from "./pages/UsersPage";
 import ParetoPage from "./pages/ParetoPage";
 import AccountPage from "./pages/AccountPage";
+import NotFoundPage from "./pages/NotFoundPage";
 
 export default function App() {
   return (
@@ -35,6 +36,10 @@ export default function App() {
               <Route element={<RequireSupervisor />}>
                 <Route path="/users" element={<UsersPage />} />
               </Route>
+
+              {/* Otidipote allo: 404 MESA sto Layout, oste na kratisei o xristis
+                  to menou kai na mporei na paei kapou allou me ena klik. */}
+              <Route path="*" element={<NotFoundPage />} />
             </Route>
           </Route>
         </Routes>

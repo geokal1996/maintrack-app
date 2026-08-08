@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@Tag(name = "Users", description = "Diaxeirisi xriston (texnikoi, epoptes, diefthintes)")
+@Tag(name = "Users", description = "Διαχείριση χρηστών (τεχνικοί, προϊστάμενοι, διευθυντές)")
 @RestController
 @RequestMapping("/api/users")
 public class UserController {

@@ -21,7 +21,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-@Tag(name = "Auth", description = "Syndesi kai eggrafi")
+@Tag(name = "Auth", description = "Σύνδεση και εγγραφή χρηστών")
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
@@ -61,7 +61,7 @@ public class AuthController {
         );
 
         User user = userRepository.findByUsername(request.getUsername())
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Δεν βρέθηκε ο χρήστης"));
 
         String token = jwtService.generateToken(user.getUsername(), user.getRole().name());
 

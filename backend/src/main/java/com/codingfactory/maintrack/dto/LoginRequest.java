@@ -4,10 +4,10 @@ import jakarta.validation.constraints.NotBlank;
 
 public class LoginRequest {
 
-    @NotBlank(message = "To username einai ipoxreotiko")
+    @NotBlank(message = "Το username είναι υποχρεωτικό")
     private String username;
 
-    @NotBlank(message = "O kodikos einai ipoxreotikos")
+    @NotBlank(message = "Ο κωδικός είναι υποχρεωτικός")
     private String password;
 
     public String getUsername() {

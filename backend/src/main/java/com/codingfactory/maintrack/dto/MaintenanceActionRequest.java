@@ -4,7 +4,7 @@ import jakarta.validation.constraints.NotNull;
 
 public class MaintenanceActionRequest {
 
-    @NotNull(message = "To technicianUserId einai ipoxreotiko")
+    @NotNull(message = "Ο τεχνικός είναι υποχρεωτικός")
     private Long technicianUserId;
 
     private String description;

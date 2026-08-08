@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.time.LocalDate;
 import java.util.List;
 
-@Tag(name = "Stats", description = "Statistika kai analytics (Pareto diagrammata)")
+@Tag(name = "Stats", description = "Στατιστικά συντήρησης: Pareto, MTBF/MTTR, τάση στον χρόνο")
 @RestController
 @RequestMapping("/api/stats")
 public class StatsController {

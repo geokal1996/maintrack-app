@@ -9,6 +9,7 @@ import com.codingfactory.maintrack.model.User;
 import com.codingfactory.maintrack.repository.UserRepository;
 import com.codingfactory.maintrack.service.FaultImportService;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpHeaders;
@@ -19,7 +20,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-@Tag(name = "Fault Import", description = "Mazikí eisagogí vlavón apó arxeío Excel")
+@Tag(name = "Fault Import", description = "Μαζική εισαγωγή βλαβών από αρχείο Excel")
 @RestController
 @RequestMapping("/api/faults/import")
 public class FaultImportController {
@@ -37,6 +38,9 @@ public class FaultImportController {
 
     // 1o vima: "ti exei mesa auto to arxeio;" - epistrefei tis stiles tou, ena deigma
     // ton protwn grammon kai mia protasi antistoixisis. Den apothikevei TIPOTA.
+    @Operation(summary = "1ο βήμα — Έλεγχος αρχείου",
+            description = "Διαβάζει το αρχείο και επιστρέφει τις επικεφαλίδες του, δείγμα των πρώτων "
+                    + "γραμμών και μια ΠΡΟΤΑΣΗ αντιστοίχισης στηλών. ΔΕΝ αποθηκεύει τίποτα στη βάση.")
     @PostMapping(value = "/inspect", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ImportPreviewResponse inspect(@RequestParam("file") MultipartFile file) {
         return faultImportService.inspect(file);
@@ -45,6 +49,10 @@ public class FaultImportController {
     // Endiameso vima: "poies mihanes anaferei to arxeio kai se poies dikes mas
     // antistoixoun;" - epistrefei protaseis pou o xristis epivevaionei i allazei.
     // DEN grafei tipota sti vasi.
+    @Operation(summary = "2ο βήμα — Αντιστοίχιση μηχανών",
+            description = "Για κάθε όνομα μηχανής του αρχείου προτείνει την αντίστοιχη μηχανή της βάσης. "
+                    + "Τα ψηφία δεν συγχωρούνται ποτέ: «Πρέσα 1» δεν αντιστοιχίζεται σε «Πρέσα 2». "
+                    + "Όπου δεν υπάρχει σίγουρη πρόταση, αποφασίζει ο χρήστης. ΔΕΝ αποθηκεύει τίποτα.")
     @PostMapping(value = "/match-machines", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public MachineMatchResponse matchMachines(@RequestParam("file") MultipartFile file,
                                                @RequestParam("machineColumn") int machineColumn) {
@@ -55,6 +63,10 @@ public class FaultImportController {
     // ton stilon erxetai apo ton xristi· an leipei, prospathoume na anagnorisoume
     // moni mas ti morfi (diko mas ypodeigma i SAP IW29).
     // To dikaioma (SUPERVISOR/MANAGER) orizetai sto SecurityConfig.
+    @Operation(summary = "3ο βήμα — Εκτέλεση εισαγωγής",
+            description = "Δημιουργεί τις βλάβες. Μία προβληματική γραμμή ΔΕΝ ακυρώνει όλο το αρχείο — "
+                    + "επιστρέφεται αναλυτικά τι πέρασε, τι παραλείφθηκε ως διπλοεγγραφή και τι απέτυχε "
+                    + "και γιατί. Επιτρέπεται σε ΠΡΟΪΣΤΑΜΕΝΟ και ΔΙΕΥΘΥΝΤΗ.")
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ImportResultResponse importFaults(@RequestParam("file") MultipartFile file,
                                               @RequestParam(value = "mapping", required = false) String mappingJson) {
@@ -70,6 +82,8 @@ public class FaultImportController {
     }
 
     // Katevasma tou ypodeigmatos, gia na kserei o xristis ti stiles perimenoume.
+    @Operation(summary = "Κατέβασμα υποδείγματος Excel",
+            description = "Αρχείο .xlsx με τις στήλες που περιμένει η εφαρμογή και μία γραμμή παραδείγματος.")
     @GetMapping("/template")
     public ResponseEntity<ByteArrayResource> downloadTemplate() {
         byte[] content = faultImportService.buildTemplate();
@@ -83,6 +97,6 @@ public class FaultImportController {
     private User getCurrentUser() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         return userRepository.findByUsername(auth.getName())
-                .orElseThrow(() -> new ResourceNotFoundException("Den vrethike o syndedemenos xristis"));
+                .orElseThrow(() -> new ResourceNotFoundException("Δεν βρέθηκε ο συνδεδεμένος χρήστης"));
     }
 }

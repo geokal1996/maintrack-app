@@ -6,18 +6,18 @@ import jakarta.validation.constraints.NotNull;
 
 public class FaultCreateRequest {
 
-    @NotNull(message = "To machineId einai ipoxreotiko")
+    @NotNull(message = "Η μηχανή είναι υποχρεωτική")
     private Long machineId;
 
-    @NotNull(message = "To reportedByUserId einai ipoxreotiko")
+    @NotNull(message = "Ο χρήστης που αναφέρει τη βλάβη είναι υποχρεωτικός")
     private Long reportedByUserId;
 
-    @NotBlank(message = "O titlos einai ipoxreotikos")
+    @NotBlank(message = "Ο τίτλος είναι υποχρεωτικός")
     private String title;
 
     private String description;
 
-    @NotNull(message = "I sovarotita einai ipoxreotiki")
+    @NotNull(message = "Η σοβαρότητα είναι υποχρεωτική")
     private FaultSeverity severity;
 
     // Proairetiko: se poion texniko anatithetai amesos i vlavi.

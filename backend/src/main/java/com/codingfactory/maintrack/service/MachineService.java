@@ -55,7 +55,7 @@ public class MachineService {
     // Xrisimo kai gia alla services (p.x. to FaultService xreiazetai to idio to Machine entity, oxi to DTO)
     public Machine findEntityById(Long id) {
         return machineRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Machine not found with id " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Δεν βρέθηκε μηχανή με id " + id));
     }
 
     // Xrisimo otan allo service (p.x. FaultService) allazei tin katastasi mias mihanis

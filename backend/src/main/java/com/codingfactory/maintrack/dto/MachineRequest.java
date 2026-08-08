@@ -8,15 +8,15 @@ import jakarta.validation.constraints.NotNull;
 // DEN einai idio me to Machine entity - den exei p.x. tipota parapano, mono ta pedia pou xreiazetai.
 public class MachineRequest {
 
-    @NotBlank(message = "O kodikos einai ipoxreotikos")
+    @NotBlank(message = "Ο κωδικός είναι υποχρεωτικός")
     private String code;
 
-    @NotBlank(message = "To onoma einai ipoxreotiko")
+    @NotBlank(message = "Το όνομα είναι υποχρεωτικό")
     private String name;
 
     private String area;
 
-    @NotNull(message = "I katastasi einai ipoxreotiki")
+    @NotNull(message = "Η κατάσταση είναι υποχρεωτική")
     private MachineStatus status;
 
     public String getCode() {
