@@ -5,6 +5,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -47,11 +48,23 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 
-    // Otan to username/password sto login den einai sosta
+    // Otan to username/password sto login den einai sosta.
+    // PROSOXI: to minima einai epitides GENIKO - den leme "den yparxei autos o xristis",
+    // giati auto tha epetrepe se kapoion na anakalypsei poia usernames yparxoun.
     @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<ApiError> handleBadCredentials(BadCredentialsException ex) {
-        ApiError error = new ApiError(HttpStatus.UNAUTHORIZED.value(), "Lathos username i password");
+        ApiError error = new ApiError(HttpStatus.UNAUTHORIZED.value(), "Λάθος username ή κωδικός");
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
+    }
+
+    // Otan o logariasmos yparxei alla einai ANENERGOS (p.x. nea eggrafi pou perimenei
+    // egkrisi apo epopti). Edo to sygkekrimeno minima einai xrisimo, oxi epikindyno -
+    // o xristis kserei idi to password tou.
+    @ExceptionHandler(DisabledException.class)
+    public ResponseEntity<ApiError> handleDisabled(DisabledException ex) {
+        ApiError error = new ApiError(HttpStatus.FORBIDDEN.value(),
+                "Ο λογαριασμός σου δεν έχει ενεργοποιηθεί ακόμα. Ζήτησε από έναν επόπτη να τον εγκρίνει.");
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
     }
 
     // Otan o syndedemenos xristis EXEI men login, alla den exei to dikaioma gia AUTI ti sygkekrimeni energeia

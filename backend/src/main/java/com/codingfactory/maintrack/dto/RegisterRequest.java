@@ -1,12 +1,16 @@
 package com.codingfactory.maintrack.dto;
 
-import com.codingfactory.maintrack.model.Role;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
-public class UserRequest {
+// Aitisi eggrafis neou xristi apo tin othoni syndesis.
+//
+// PROSOXI: DEN yparxei pedio "role" edo, kai auto einai skopimo. An to eixе,
+// opoiosdipote tha mporouse na stelnei ena aitima me role=MANAGER kai na apoktisei
+// pliri dikaiomata. O rolos orizetai PANTA apo ton server (TECHNICIAN) kai o
+// logariasmos dimiourgeitai ANENERGOS, mexri na ton egkrinei epoptis.
+public class RegisterRequest {
 
     @NotBlank(message = "Το username είναι υποχρεωτικό")
     @Pattern(regexp = "^[a-z][a-z0-9._-]{2,29}$",
@@ -23,10 +27,6 @@ public class UserRequest {
     @NotBlank(message = "Το ονοματεπώνυμο είναι υποχρεωτικό")
     private String fullName;
 
-    @NotNull(message = "Ο ρόλος είναι υποχρεωτικός")
-    private Role role;
-
-    // Proaiaretiko - den exei @NotBlank giati mporei na meinei kenos
     private String jobTitle;
 
     public String getUsername() {
@@ -51,14 +51,6 @@ public class UserRequest {
 
     public void setFullName(String fullName) {
         this.fullName = fullName;
-    }
-
-    public Role getRole() {
-        return role;
-    }
-
-    public void setRole(Role role) {
-        this.role = role;
     }
 
     public String getJobTitle() {

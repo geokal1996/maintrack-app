@@ -10,6 +10,7 @@ import FaultsPage from "./pages/FaultsPage";
 import FaultDetailPage from "./pages/FaultDetailPage";
 import UsersPage from "./pages/UsersPage";
 import ParetoPage from "./pages/ParetoPage";
+import AccountPage from "./pages/AccountPage";
 
 export default function App() {
   return (
@@ -26,6 +27,7 @@ export default function App() {
               <Route path="/faults" element={<FaultsPage />} />
               <Route path="/faults/:id" element={<FaultDetailPage />} />
               <Route path="/pareto" element={<ParetoPage />} />
+              <Route path="/account" element={<AccountPage />} />
 
               {/* Auto to route xreiazetai EPIPLEON kai rolo SUPERVISOR */}
               <Route element={<RequireSupervisor />}>

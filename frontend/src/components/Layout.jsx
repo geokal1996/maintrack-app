@@ -88,13 +88,13 @@ export default function Layout() {
             {isDark ? <Sun size={16} /> : <Moon size={16} />}
           </button>
 
-          <div className="user-chip">
+          <NavLink to="/account" className="user-chip" title="Ο λογαριασμός μου">
             <span className="avatar">{initials}</span>
             <span className="user-name">
               <strong>{user?.fullName}</strong>
               <span>{user?.role}</span>
             </span>
-          </div>
+          </NavLink>
 
           <button className="icon-btn" onClick={handleLogout} title="Αποσύνδεση" aria-label="Αποσύνδεση">
             <LogOut size={16} />

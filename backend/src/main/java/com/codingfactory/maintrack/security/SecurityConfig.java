@@ -101,6 +101,11 @@ public class SecurityConfig {
                         // Diagrafi mihanis -> MONO MANAGER (pio "epikindini" energeia, pio psilo dikaioma)
                         .requestMatchers(HttpMethod.DELETE, "/api/machines/**").hasRole("MANAGER")
 
+                        // O KATHE syndedemenos (kai o texnikos) mporei na allaxei ton DIKO TOU kodiko.
+                        // PROSOXI: prepei na einai PANO apo to "/api/users/**" pou akolouthei,
+                        // giati to Spring Security efarmozei ton PROTO kanona pou tairiazei.
+                        .requestMatchers("/api/users/me/**").authenticated()
+
                         // Diaxeirisi xriston -> SUPERVISOR i MANAGER (to POIOUS rolous mporei
                         // na dimiourgisei o kathenas elenxetai pio analytika mesa sto UserService)
                         .requestMatchers("/api/users/**").hasAnyRole("SUPERVISOR", "MANAGER")

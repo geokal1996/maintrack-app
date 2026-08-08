@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
-import { Users, Plus, X, Save, UserCheck, UserX } from "lucide-react";
+import { Users, Plus, X, Save, UserCheck, UserX, Clock } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
-import { getUsers, createUser, setUserActive } from "../api/usersApi";
+import { getUsers, createUser, setUserActive, updateUserRole } from "../api/usersApi";
 import { SkeletonTable } from "../components/Skeleton";
 import EmptyState from "../components/EmptyState";
 import { confirmToast } from "../components/confirmToast";
@@ -16,8 +16,8 @@ const ROLE_LABELS = {
 const emptyForm = { username: "", password: "", fullName: "", role: "TECHNICIAN", jobTitle: "" };
 
 export default function UsersPage() {
-  const { isManager } = useAuth();
-  // O SUPERVISOR mporei na ftiaxnei MONO TECHNICIAN. O MANAGER mporei TECHNICIAN i SUPERVISOR
+  const { user: currentUser, isManager } = useAuth();
+  // O SUPERVISOR mporei na diaxeiristei MONO TECHNICIAN. O MANAGER kai TECHNICIAN kai SUPERVISOR
   // (oxi allon MANAGER - auto ginetai mono me to xeri stin vasi, gia asfaleia).
   const availableRoles = isManager ? ["TECHNICIAN", "SUPERVISOR"] : ["TECHNICIAN"];
 
@@ -36,6 +36,15 @@ export default function UsersPage() {
 
   useEffect(loadUsers, []);
 
+  function showApiError(err, fallback) {
+    const data = err.response?.data;
+    if (data && typeof data === "object" && !data.message) {
+      toast.error(Object.values(data).join(" · "));
+    } else {
+      toast.error(data?.message || fallback);
+    }
+  }
+
   async function handleCreate(e) {
     e.preventDefault();
     setSaving(true);
@@ -46,10 +55,7 @@ export default function UsersPage() {
       setShowForm(false);
       loadUsers();
     } catch (err) {
-      toast.error(
-        err.response?.data?.message ||
-          "Δεν ήταν δυνατή η δημιουργία — έλεγξε τα στοιχεία (π.χ. αν το username υπάρχει ήδη)"
-      );
+      showApiError(err, "Δεν ήταν δυνατή η δημιουργία");
     } finally {
       setSaving(false);
     }
@@ -67,9 +73,44 @@ export default function UsersPage() {
       toast.success(u.active ? "Ο χρήστης απενεργοποιήθηκε" : "Ο χρήστης ενεργοποιήθηκε");
       loadUsers();
     } catch (err) {
-      toast.error(err.response?.data?.message || "Δεν ήταν δυνατή η αλλαγή");
+      showApiError(err, "Δεν ήταν δυνατή η αλλαγή");
     }
   }
+
+  async function handleRoleChange(u, newRole) {
+    if (newRole === u.role) return;
+
+    const ok = await confirmToast(
+      `Να αλλάξει ο ρόλος του ${u.username} από «${ROLE_LABELS[u.role]}» σε «${ROLE_LABELS[newRole]}»;`,
+      { confirmLabel: "Αλλαγή ρόλου" }
+    );
+    if (!ok) {
+      loadUsers(); // epanafora tou dropdown stin proigoumeni timi
+      return;
+    }
+
+    try {
+      await updateUserRole(u.id, newRole);
+      toast.success(`Ο ${u.username} είναι πλέον ${ROLE_LABELS[newRole]}`);
+      loadUsers();
+    } catch (err) {
+      showApiError(err, "Δεν ήταν δυνατή η αλλαγή ρόλου");
+      loadUsers();
+    }
+  }
+
+  // Poious rolous mporo na DOSO se ayton ton xristi
+  function assignableRolesFor(u) {
+    // Ston eauto mou den allazo rolo
+    if (u.username === currentUser?.username) return null;
+    // Ton MANAGER den ton peirazei kaneis apo tin efarmogi
+    if (u.role === "MANAGER") return null;
+    // O epoptis diaxeirizetai mono texnikous
+    if (!isManager && u.role !== "TECHNICIAN") return null;
+    return availableRoles;
+  }
+
+  const pendingApproval = users.filter((u) => !u.active).length;
 
   return (
     <div>
@@ -78,6 +119,25 @@ export default function UsersPage() {
         Χρήστες
         <span className="sub">{users.length} λογαριασμοί</span>
       </h1>
+
+      {pendingApproval > 0 && (
+        <div
+          className="card"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "0.7rem",
+            borderLeft: "4px solid var(--warning)",
+          }}
+        >
+          <Clock size={20} style={{ color: "var(--warning)", flexShrink: 0 }} />
+          <span>
+            <strong>{pendingApproval}</strong>{" "}
+            {pendingApproval === 1 ? "λογαριασμός περιμένει" : "λογαριασμοί περιμένουν"} έγκριση.
+            Ενεργοποίησέ τους από τη λίστα παρακάτω για να μπορέσουν να συνδεθούν.
+          </span>
+        </div>
+      )}
 
       <div className="card">
         <div className="card-header">
@@ -99,19 +159,24 @@ export default function UsersPage() {
                     required
                     placeholder="π.χ. g.papadopoulos"
                     value={form.username}
-                    onChange={(e) => setForm({ ...form, username: e.target.value })}
+                    onChange={(e) => setForm({ ...form, username: e.target.value.toLowerCase() })}
                   />
+                  <span className="muted" style={{ fontSize: "0.76rem" }}>
+                    πεζά λατινικά, αριθμοί, τελεία ή παύλα
+                  </span>
                 </div>
                 <div className="form-row">
-                  <label>Password</label>
+                  <label>Κωδικός</label>
                   <input
                     type="password"
                     required
-                    minLength={4}
                     placeholder="••••••••"
                     value={form.password}
                     onChange={(e) => setForm({ ...form, password: e.target.value })}
                   />
+                  <span className="muted" style={{ fontSize: "0.76rem" }}>
+                    τουλάχιστον 8 χαρακτήρες, με γράμμα και αριθμό
+                  </span>
                 </div>
                 <div className="form-row">
                   <label>Ονοματεπώνυμο</label>
@@ -163,47 +228,75 @@ export default function UsersPage() {
               <thead>
                 <tr>
                   <th>Χρήστης</th>
-                  <th>Ρόλος</th>
+                  <th style={{ minWidth: 150 }}>Ρόλος</th>
                   <th>Τίτλος θέσης</th>
                   <th>Κατάσταση</th>
                   <th></th>
                 </tr>
               </thead>
               <tbody>
-                {users.map((u) => (
-                  <tr key={u.id}>
-                    <td>
-                      <div style={{ fontWeight: 600 }}>{u.fullName}</div>
-                      <div className="muted mono" style={{ fontSize: "0.78rem" }}>
-                        {u.username}
-                      </div>
-                    </td>
-                    <td>
-                      <span className={`badge role-${u.role}`}>{ROLE_LABELS[u.role]}</span>
-                    </td>
-                    <td className="muted">{u.jobTitle || "—"}</td>
-                    <td>
-                      <span
-                        className="badge dot"
-                        style={{
-                          background: u.active ? "var(--success-soft)" : "var(--surface-hover)",
-                          color: u.active ? "var(--success)" : "var(--text-muted)",
-                        }}
-                      >
-                        {u.active ? "Ενεργός" : "Ανενεργός"}
-                      </span>
-                    </td>
-                    <td style={{ textAlign: "right" }}>
-                      <button
-                        className="btn ghost small"
-                        onClick={() => handleToggleActive(u)}
-                        title={u.active ? "Απενεργοποίηση" : "Ενεργοποίηση"}
-                      >
-                        {u.active ? <UserX size={15} /> : <UserCheck size={15} />}
-                      </button>
-                    </td>
-                  </tr>
-                ))}
+                {users.map((u) => {
+                  const roles = assignableRolesFor(u);
+                  return (
+                    <tr key={u.id} style={!u.active ? { background: "var(--warning-soft)" } : undefined}>
+                      <td>
+                        <div style={{ fontWeight: 600 }}>{u.fullName}</div>
+                        <div className="muted mono" style={{ fontSize: "0.78rem" }}>
+                          {u.username}
+                          {u.username === currentUser?.username && " (εσύ)"}
+                        </div>
+                      </td>
+                      <td>
+                        {roles ? (
+                          <select
+                            value={u.role}
+                            onChange={(e) => handleRoleChange(u, e.target.value)}
+                            style={{
+                              padding: "0.3rem 0.45rem",
+                              border: "1px solid var(--border-strong)",
+                              borderRadius: "var(--radius-sm)",
+                              background: "var(--surface-2)",
+                              color: "var(--text)",
+                              fontFamily: "inherit",
+                              fontSize: "0.82rem",
+                            }}
+                          >
+                            {[...new Set([u.role, ...roles])].map((r) => (
+                              <option key={r} value={r}>
+                                {ROLE_LABELS[r]}
+                              </option>
+                            ))}
+                          </select>
+                        ) : (
+                          <span className={`badge role-${u.role}`}>{ROLE_LABELS[u.role]}</span>
+                        )}
+                      </td>
+                      <td className="muted">{u.jobTitle || "—"}</td>
+                      <td>
+                        <span
+                          className="badge dot"
+                          style={{
+                            background: u.active ? "var(--success-soft)" : "var(--warning-soft)",
+                            color: u.active ? "var(--success)" : "var(--warning)",
+                          }}
+                        >
+                          {u.active ? "Ενεργός" : "Αναμονή έγκρισης"}
+                        </span>
+                      </td>
+                      <td style={{ textAlign: "right" }}>
+                        {u.username !== currentUser?.username && (
+                          <button
+                            className="btn ghost small"
+                            onClick={() => handleToggleActive(u)}
+                            title={u.active ? "Απενεργοποίηση" : "Ενεργοποίηση"}
+                          >
+                            {u.active ? <UserX size={15} /> : <UserCheck size={15} />}
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>

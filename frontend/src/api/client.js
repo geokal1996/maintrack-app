@@ -17,12 +17,21 @@ apiClient.interceptors.request.use((config) => {
   return config;
 });
 
+// Endpoints opou ena 401 einai FYSIOLOGIKI apantisi kai OXI "elikse i syndesi sou".
+// P.x. sto login, to 401 simainei apla "lathos kodikos" - den exei noima na
+// "apossyndesoume" kapoion pou den einai kan syndedemenos.
+const AUTH_ENDPOINTS = ["/api/auth/login", "/api/auth/register"];
+
 // An to backend apantisei 401 (to token elikse i den isxyei), stelnoume
 // automata ton xristi piso sto login.
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response && error.response.status === 401) {
+    const status = error.response?.status;
+    const url = error.config?.url || "";
+    const isAuthEndpoint = AUTH_ENDPOINTS.some((endpoint) => url.includes(endpoint));
+
+    if (status === 401 && !isAuthEndpoint) {
       localStorage.removeItem("maintrack_token");
       localStorage.removeItem("maintrack_user");
       window.location.href = "/login";
