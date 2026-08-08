@@ -2,8 +2,10 @@ target/
 .idea/
 *.iml
 .vscode/
-.mvn/
-mvnw
-mvnw.cmd
 *.log
 .DS_Store
+
+# PROSOXI: to Maven Wrapper (mvnw, mvnw.cmd, .mvn/) DEN to agnooume.
+# Prepei na anevainei sto repo, giati akrivos auto einai i douleia tou: na mporei
+# opoiosdipote katevasei to project na to xtisei me ".\mvnw.cmd clean package",
+# XORIS na exei egkatestimeno Maven sto systima tou.
