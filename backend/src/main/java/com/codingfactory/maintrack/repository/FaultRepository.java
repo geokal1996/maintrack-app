@@ -39,6 +39,7 @@ public interface FaultRepository extends JpaRepository<Fault, Long> {
             select f from Fault f
             where (:status is null or f.status = :status)
               and (:machineId is null or f.machine.id = :machineId)
+              and (:assignedToUserId is null or f.assignedTo.id = :assignedToUserId)
               and (:q is null
                    or lower(f.title) like lower(concat('%', cast(:q as string), '%'))
                    or lower(f.machine.code) like lower(concat('%', cast(:q as string), '%'))
@@ -46,6 +47,7 @@ public interface FaultRepository extends JpaRepository<Fault, Long> {
             """)
     Page<Fault> search(@Param("status") FaultStatus status,
                         @Param("machineId") Long machineId,
+                        @Param("assignedToUserId") Long assignedToUserId,
                         @Param("q") String q,
                         Pageable pageable);
 }

@@ -6,6 +6,7 @@ import com.codingfactory.maintrack.dto.ImportResultResponse;
 import com.codingfactory.maintrack.dto.MachineMatchResponse;
 import com.codingfactory.maintrack.model.*;
 import com.codingfactory.maintrack.repository.FaultRepository;
+import com.codingfactory.maintrack.repository.FaultStatusChangeRepository;
 import com.codingfactory.maintrack.repository.MachineRepository;
 import com.codingfactory.maintrack.repository.MaintenanceActionRepository;
 import com.codingfactory.maintrack.repository.UserRepository;
@@ -54,15 +55,18 @@ public class FaultImportService {
     private final MachineRepository machineRepository;
     private final UserRepository userRepository;
     private final MaintenanceActionRepository maintenanceActionRepository;
+    private final FaultStatusChangeRepository statusChangeRepository;
 
     public FaultImportService(FaultRepository faultRepository,
                                MachineRepository machineRepository,
                                UserRepository userRepository,
-                               MaintenanceActionRepository maintenanceActionRepository) {
+                               MaintenanceActionRepository maintenanceActionRepository,
+                               FaultStatusChangeRepository statusChangeRepository) {
         this.faultRepository = faultRepository;
         this.machineRepository = machineRepository;
         this.userRepository = userRepository;
         this.maintenanceActionRepository = maintenanceActionRepository;
+        this.statusChangeRepository = statusChangeRepository;
     }
 
     // ---------------------------------------------------------------
@@ -359,6 +363,8 @@ public class FaultImportService {
         Fault fault = new Fault();
         fault.setMachine(machine);
         fault.setReportedBy(technician);
+        // Stin eisagogi apo arxeio, o texnikos tis grammis einai kai o ypeuthinos tis vlavis
+        fault.setAssignedTo(technician);
         // I pragmatiki imerominia tis vlavis - to @PrePersist tou Fault vazei "tora"
         // MONO an afiso to pedio null.
         fault.setCreatedAt(data.occurredAt);
@@ -375,6 +381,14 @@ public class FaultImportService {
         }
 
         Fault savedFault = faultRepository.save(fault);
+
+        // Proti eggrafi sto istoriko: pote katachorithike i vlavi kai apo poion aneva to arxeio.
+        // Ta endiamesa vimata den ta kseroume (to arxeio dinei mono tin teliki katastasi),
+        // gi' auto katagrafoume MONO ti dimiourgia - den efevriskoume istoriko pou den yparxei.
+        FaultStatusChange creation = new FaultStatusChange(
+                savedFault, null, savedFault.getStatus(), technician);
+        creation.setChangedAt(savedFault.getCreatedAt());
+        statusChangeRepository.save(creation);
 
         // An i grammi exei energeia sintirisis i xrono diakopis, ti dimiourgoume kiolas.
         if (data.actionDescription != null || data.downtimeMinutes != null) {

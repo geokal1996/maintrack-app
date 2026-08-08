@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import toast from "react-hot-toast";
 import { Cog, Plus, X, Trash2, Save, Search, Pencil } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
@@ -223,7 +224,9 @@ export default function MachinesPage() {
               <tbody>
                 {filtered.map((m) => (
                   <tr key={m.id}>
-                    <td className="mono">{m.code}</td>
+                    <td className="mono">
+                      <Link to={`/machines/${m.id}`}>{m.code}</Link>
+                    </td>
                     <td>{m.name}</td>
                     <td className="muted">{m.area || "—"}</td>
                     <td>

@@ -1,6 +1,8 @@
 package com.codingfactory.maintrack.controller;
 
 import com.codingfactory.maintrack.dto.ParetoDashboardResponse;
+import com.codingfactory.maintrack.dto.ReliabilityResponse;
+import com.codingfactory.maintrack.dto.TrendPointResponse;
 import com.codingfactory.maintrack.service.StatsService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -11,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Tag(name = "Stats", description = "Statistika kai analytics (Pareto diagrammata)")
 @RestController
@@ -37,5 +40,31 @@ public class StatsController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
             @RequestParam(required = false) String area) {
         return statsService.getParetoDashboard(from, to, area);
+    }
+
+    @Operation(summary = "Δείκτες αξιοπιστίας: MTBF, MTTR, διαθεσιμότητα",
+            description = "MTBF = μέσος χρόνος μεταξύ βλαβών (όσο μεγαλύτερος τόσο καλύτερα). "
+                    + "MTTR = μέσος χρόνος επισκευής (όσο μικρότερος τόσο καλύτερα). "
+                    + "Διαθεσιμότητα = MTBF / (MTBF + MTTR). "
+                    + "Στον MTTR μετρώνται μόνο οι βλάβες με καταγεγραμμένη διάρκεια.")
+    @GetMapping("/reliability")
+    public ReliabilityResponse getReliability(
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
+            @RequestParam(required = false) String area,
+            @RequestParam(required = false) Long machineId) {
+        return statsService.getReliability(from, to, area, machineId);
+    }
+
+    @Operation(summary = "Τάση βλαβών και χρόνου διακοπής ανά μήνα",
+            description = "Δείχνει αν η κατάσταση βελτιώνεται ή χειροτερεύει με τον χρόνο — "
+                    + "κάτι που τα διαγράμματα Pareto, ως στατική εικόνα, δεν μπορούν να δείξουν.")
+    @GetMapping("/trend")
+    public List<TrendPointResponse> getTrend(
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
+            @RequestParam(required = false) String area,
+            @RequestParam(required = false) Long machineId) {
+        return statsService.getTrend(from, to, area, machineId);
     }
 }

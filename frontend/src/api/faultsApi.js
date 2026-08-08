@@ -1,10 +1,11 @@
 import apiClient from "./client";
 
 // Selidopoiimeni anazitisi. Epistrefei { content, page, size, totalElements, totalPages, first, last }
-export function searchFaults({ status, machineId, q, page = 0, size = 25 } = {}) {
+export function searchFaults({ status, machineId, assignedToUserId, q, page = 0, size = 25 } = {}) {
   const params = { page, size };
   if (status) params.status = status;
   if (machineId) params.machineId = machineId;
+  if (assignedToUserId) params.assignedToUserId = assignedToUserId;
   if (q && q.trim()) params.q = q.trim();
   return apiClient.get("/api/faults", { params }).then((res) => res.data);
 }
@@ -35,6 +36,15 @@ export function deleteFault(id) {
 
 export function updateFaultStatus(id, status) {
   return apiClient.patch(`/api/faults/${id}/status`, { status }).then((res) => res.data);
+}
+
+// Anathesi vlavis se texniko. Stelnoume userId: null gia na afairethei i anathesi.
+export function assignFault(id, userId) {
+  return apiClient.patch(`/api/faults/${id}/assignee`, { userId }).then((res) => res.data);
+}
+
+export function getFaultHistory(id) {
+  return apiClient.get(`/api/faults/${id}/history`).then((res) => res.data);
 }
 
 export function getFaultActions(faultId) {

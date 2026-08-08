@@ -21,6 +21,13 @@ public class Fault {
     @JoinColumn(name = "reported_by_id", nullable = false)
     private User reportedBy;
 
+    // Se poion exei anatethei i vlavi. Diaferei apo to "reportedBy": allos mporei
+    // na ti dei kai na tin anaferei, kai allos na einai ypeuthinos na tin ftiaxei.
+    // Menei null oso i vlavi den exei anatethei se kanenan.
+    @ManyToOne
+    @JoinColumn(name = "assigned_to_id")
+    private User assignedTo;
+
     @Column(nullable = false)
     private String title;
 
@@ -91,6 +98,14 @@ public class Fault {
 
     public void setReportedBy(User reportedBy) {
         this.reportedBy = reportedBy;
+    }
+
+    public User getAssignedTo() {
+        return assignedTo;
+    }
+
+    public void setAssignedTo(User assignedTo) {
+        this.assignedTo = assignedTo;
     }
 
     public String getTitle() {

@@ -1,13 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import {
-  PieChart,
-  Pie,
-  Cell,
-  ResponsiveContainer,
-  Tooltip,
-  Legend,
-} from "recharts";
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from "recharts";
 import {
   AlertTriangle,
   CircleSlash,
@@ -18,8 +11,11 @@ import {
 } from "lucide-react";
 import { getFaults } from "../api/faultsApi";
 import { getMachines } from "../api/machinesApi";
+import { getReliability } from "../api/statsApi";
 import { SkeletonCards, SkeletonTable } from "../components/Skeleton";
 import EmptyState from "../components/EmptyState";
+import PeriodFilter, { presetToRange } from "../components/PeriodFilter";
+import ReliabilityCards from "../components/ReliabilityCards";
 
 const STATUS_META = {
   OPERATIONAL: { label: "Σε λειτουργία", color: "#16a34a" },
@@ -44,8 +40,15 @@ function StatCard({ icon: Icon, value, label, accent, accentSoft }) {
 export default function DashboardPage() {
   const [faults, setFaults] = useState([]);
   const [machines, setMachines] = useState([]);
+  const [reliability, setReliability] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  const [preset, setPreset] = useState("90d");
+  const [from, setFrom] = useState(() => presetToRange("90d").from);
+  const [to, setTo] = useState(() => presetToRange("90d").to);
+
+  // I trexousa katastasi (anoixtes vlaves, mihanes ektos) den filtrarezetai
+  // apo periodo - "ti symvainei TORA" den exei noima na to koitas gia ton Marti.
   useEffect(() => {
     Promise.all([getFaults({ status: "OPEN" }), getMachines()])
       .then(([openFaults, allMachines]) => {
@@ -54,6 +57,20 @@ export default function DashboardPage() {
       })
       .finally(() => setLoading(false));
   }, []);
+
+  // Oi deiktes omos EXOUN noima ana periodo
+  useEffect(() => {
+    getReliability({ from, to }).then(setReliability).catch(() => setReliability(null));
+  }, [from, to]);
+
+  function handlePresetChange(next) {
+    setPreset(next);
+    if (next !== "custom") {
+      const range = presetToRange(next);
+      setFrom(range.from);
+      setTo(range.to);
+    }
+  }
 
   if (loading) {
     return (
@@ -72,7 +89,6 @@ export default function DashboardPage() {
   const downMachines = machines.filter((m) => m.status === "DOWN");
   const allHealthy = downMachines.length === 0;
 
-  // Katanomi mihanon ana katastasi, gia to donut chart
   const distribution = Object.keys(STATUS_META)
     .map((key) => ({
       name: STATUS_META[key].label,
@@ -112,6 +128,21 @@ export default function DashboardPage() {
           accentSoft="var(--primary-soft)"
         />
       </div>
+
+      <h2 style={{ fontSize: "1.05rem", margin: "1.5rem 0 0.75rem" }}>Δείκτες περιόδου</h2>
+      <PeriodFilter
+        preset={preset}
+        onPresetChange={handlePresetChange}
+        from={from}
+        to={to}
+        onFromChange={setFrom}
+        onToChange={setTo}
+        area=""
+        onAreaChange={() => {}}
+        availableAreas={[]}
+        totalFaults={reliability?.totalFaults}
+      />
+      <ReliabilityCards data={reliability} />
 
       <div className="grid-2" style={{ marginTop: "1.25rem" }}>
         <div className="card" style={{ marginBottom: 0 }}>
@@ -173,7 +204,9 @@ export default function DashboardPage() {
                 <tbody>
                   {downMachines.map((m) => (
                     <tr key={m.id}>
-                      <td className="mono">{m.code}</td>
+                      <td className="mono">
+                        <Link to={`/machines/${m.id}`}>{m.code}</Link>
+                      </td>
                       <td>{m.name}</td>
                       <td className="muted">{m.area}</td>
                     </tr>
@@ -216,7 +249,9 @@ export default function DashboardPage() {
               <tbody>
                 {faults.map((f) => (
                   <tr key={f.id}>
-                    <td className={`sev-cell sev-${f.severity} mono`}>{f.machineCode}</td>
+                    <td className={`sev-cell sev-${f.severity} mono`}>
+                      <Link to={`/machines/${f.machineId}`}>{f.machineCode}</Link>
+                    </td>
                     <td>{f.title}</td>
                     <td>
                       <span className={`badge severity-${f.severity}`}>{f.severity}</span>

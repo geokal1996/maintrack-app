@@ -2,6 +2,8 @@ package com.codingfactory.maintrack.service;
 
 import com.codingfactory.maintrack.dto.ParetoDashboardResponse;
 import com.codingfactory.maintrack.dto.ParetoItemResponse;
+import com.codingfactory.maintrack.dto.ReliabilityResponse;
+import com.codingfactory.maintrack.dto.TrendPointResponse;
 import com.codingfactory.maintrack.model.Fault;
 import com.codingfactory.maintrack.model.MaintenanceAction;
 import com.codingfactory.maintrack.repository.FaultRepository;
@@ -11,6 +13,8 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.YearMonth;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -35,17 +39,123 @@ public class StatsService {
         this.machineRepository = machineRepository;
     }
 
-    public ParetoDashboardResponse getParetoDashboard(LocalDate from, LocalDate to, String area) {
-        // Ola ta filtra efarmozontai PANO STIS VLAVES. Gia to Pareto tou xronou
-        // diakopis, kratame tis energeies pou anikoun stis filtrarismenes vlaves -
-        // dld metrame "ti mas kostise oti xalase se auti tin periodo", oxi "poti
-        // egine i episkevi". Alliws mia vlavi tou Dekemvriou pou episkevastike ton
-        // Ianouario tha metrouse se lathos mina.
-        List<Fault> faults = faultRepository.findAll().stream()
-                .filter(f -> matchesPeriod(f, from, to))
-                .filter(f -> matchesArea(f, area))
+    // ---------------------------------------------------------------
+    //  Deiktes axiopistias: MTBF / MTTR / Diathesimotita
+    // ---------------------------------------------------------------
+
+    public ReliabilityResponse getReliability(LocalDate from, LocalDate to, String area, Long machineId) {
+        List<Fault> faults = filteredFaults(from, to, area).stream()
+                .filter(f -> machineId == null || f.getMachine().getId().equals(machineId))
                 .toList();
 
+        ReliabilityResponse response = new ReliabilityResponse();
+        response.setTotalFaults(faults.size());
+
+        Set<Long> faultIds = faults.stream().map(Fault::getId).collect(Collectors.toSet());
+
+        // Synoliko downtime kai poses vlaves exoun ONTOS katagegrammeni diarkeia.
+        // Prosoxi: den metrame tis vlaves xoris diarkeia ston MTTR - tha travousan
+        // ton meso oro pros ta kato kai tha edine psefti eikona "grigoron episkevon".
+        long totalDowntime = 0;
+        int faultsWithDowntime = 0;
+        for (MaintenanceAction action : maintenanceActionRepository.findAll()) {
+            if (!faultIds.contains(action.getFault().getId())) {
+                continue;
+            }
+            if (action.getDowntimeMinutes() != null && action.getDowntimeMinutes() > 0) {
+                totalDowntime += action.getDowntimeMinutes();
+                faultsWithDowntime++;
+            }
+        }
+        response.setTotalDowntimeMinutes(totalDowntime);
+
+        // I periodos parakolouthisis: eite auti pou zitise o xristis, eite (an den
+        // orise) apo tin proti mexri tin teleftaia vlavi.
+        LocalDate start = from != null ? from : earliestFaultDate(faults);
+        LocalDate end = to != null ? to : LocalDate.now();
+        long days = start == null ? 0 : Math.max(1, ChronoUnit.DAYS.between(start, end) + 1);
+        response.setPeriodDays(days);
+
+        if (!faults.isEmpty() && days > 0) {
+            double totalHours = days * 24.0;
+            // MTBF: poses ores "antexei" i mihani anamesa se dyo vlaves
+            response.setMtbfHours(round1(totalHours / faults.size()));
+        }
+        if (faultsWithDowntime > 0) {
+            // MTTR: poses ores pairnei kata meso oro mia episkevi
+            response.setMttrHours(round1((totalDowntime / 60.0) / faultsWithDowntime));
+        }
+        if (response.getMtbfHours() != null && response.getMttrHours() != null) {
+            double mtbf = response.getMtbfHours();
+            double mttr = response.getMttrHours();
+            response.setAvailabilityPercent(round1(100.0 * mtbf / (mtbf + mttr)));
+        }
+
+        return response;
+    }
+
+    private LocalDate earliestFaultDate(List<Fault> faults) {
+        return faults.stream()
+                .map(Fault::getCreatedAt)
+                .filter(Objects::nonNull)
+                .map(LocalDateTime::toLocalDate)
+                .min(LocalDate::compareTo)
+                .orElse(null);
+    }
+
+    // ---------------------------------------------------------------
+    //  Tasi ston xrono: vlaves kai xronos diakopis ana mina
+    // ---------------------------------------------------------------
+
+    public List<TrendPointResponse> getTrend(LocalDate from, LocalDate to, String area, Long machineId) {
+        List<Fault> faults = filteredFaults(from, to, area).stream()
+                .filter(f -> machineId == null || f.getMachine().getId().equals(machineId))
+                .filter(f -> f.getCreatedAt() != null)
+                .toList();
+
+        // Posa lepta diakopis antistoixoun se kathe vlavi
+        Map<Long, Long> downtimePerFault = new HashMap<>();
+        Set<Long> faultIds = faults.stream().map(Fault::getId).collect(Collectors.toSet());
+        for (MaintenanceAction action : maintenanceActionRepository.findAll()) {
+            Long faultId = action.getFault().getId();
+            if (faultIds.contains(faultId) && action.getDowntimeMinutes() != null) {
+                downtimePerFault.merge(faultId, action.getDowntimeMinutes().longValue(), Long::sum);
+            }
+        }
+
+        // Omadopoiisi ana mina
+        Map<YearMonth, long[]> byMonth = new TreeMap<>();
+        for (Fault fault : faults) {
+            YearMonth month = YearMonth.from(fault.getCreatedAt());
+            long[] totals = byMonth.computeIfAbsent(month, m -> new long[2]);
+            totals[0]++;                                                  // arithmos vlavon
+            totals[1] += downtimePerFault.getOrDefault(fault.getId(), 0L); // lepta diakopis
+        }
+
+        List<TrendPointResponse> result = new ArrayList<>();
+        for (Map.Entry<YearMonth, long[]> entry : byMonth.entrySet()) {
+            YearMonth month = entry.getKey();
+            result.add(new TrendPointResponse(
+                    month.toString(),
+                    GREEK_MONTHS[month.getMonthValue() - 1] + " " + month.getYear(),
+                    entry.getValue()[0],
+                    entry.getValue()[1]
+            ));
+        }
+        return result;
+    }
+
+    private static final String[] GREEK_MONTHS = {
+            "Ιαν", "Φεβ", "Μάρ", "Απρ", "Μάι", "Ιούν",
+            "Ιούλ", "Αύγ", "Σεπ", "Οκτ", "Νοέ", "Δεκ"
+    };
+
+    // ---------------------------------------------------------------
+    //  Ta tria Pareto
+    // ---------------------------------------------------------------
+
+    public ParetoDashboardResponse getParetoDashboard(LocalDate from, LocalDate to, String area) {
+        List<Fault> faults = filteredFaults(from, to, area);
         Set<Long> faultIds = faults.stream().map(Fault::getId).collect(Collectors.toSet());
 
         ParetoDashboardResponse response = new ParetoDashboardResponse(
@@ -59,6 +169,18 @@ public class StatsService {
     }
 
     // ---------------- Filtra ----------------
+
+    // Ola ta filtra efarmozontai PANO STIS VLAVES. Gia ta statistika xronou diakopis,
+    // kratame tis energeies pou anikoun stis filtrarismenes vlaves - dld metrame
+    // "ti mas kostise oti xalase se auti tin periodo", oxi "pote egine i episkevi".
+    // Alliws mia vlavi tou Dekemvriou pou episkevastike ton Ianouario tha metrouse
+    // se lathos mina.
+    private List<Fault> filteredFaults(LocalDate from, LocalDate to, String area) {
+        return faultRepository.findAll().stream()
+                .filter(f -> matchesPeriod(f, from, to))
+                .filter(f -> matchesArea(f, area))
+                .toList();
+    }
 
     private boolean matchesPeriod(Fault fault, LocalDate from, LocalDate to) {
         LocalDateTime createdAt = fault.getCreatedAt();

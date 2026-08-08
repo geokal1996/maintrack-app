@@ -14,6 +14,8 @@ import {
   Pencil,
   Trash2,
   X,
+  UserCheck,
+  History,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import {
@@ -21,12 +23,15 @@ import {
   updateFault,
   deleteFault,
   updateFaultStatus,
+  assignFault,
+  getFaultHistory,
   getFaultActions,
   addFaultAction,
   updateFaultAction,
   deleteFaultAction,
 } from "../api/faultsApi";
 import { getMachines } from "../api/machinesApi";
+import { getUsers } from "../api/usersApi";
 import { SkeletonBlock } from "../components/Skeleton";
 import EmptyState from "../components/EmptyState";
 import { confirmToast } from "../components/confirmToast";
@@ -57,12 +62,15 @@ const emptyActionForm = { description: "", downtimeMinutes: "" };
 
 export default function FaultDetailPage() {
   const { id } = useParams();
-  const { user, isManager } = useAuth();
+  const { user, isManager, canManageUsers } = useAuth();
   const navigate = useNavigate();
 
   const [fault, setFault] = useState(null);
   const [actions, setActions] = useState([]);
+  const [history, setHistory] = useState([]);
   const [machines, setMachines] = useState([]);
+  const [technicians, setTechnicians] = useState([]);
+  const [assigning, setAssigning] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const [actionForm, setActionForm] = useState(emptyActionForm);
@@ -77,10 +85,11 @@ export default function FaultDetailPage() {
 
   function loadAll() {
     setLoading(true);
-    Promise.all([getFault(id), getFaultActions(id)])
-      .then(([f, a]) => {
+    Promise.all([getFault(id), getFaultActions(id), getFaultHistory(id)])
+      .then(([f, a, h]) => {
         setFault(f);
         setActions(a);
+        setHistory(h);
       })
       .finally(() => setLoading(false));
   }
@@ -90,6 +99,16 @@ export default function FaultDetailPage() {
   useEffect(() => {
     getMachines().then(setMachines);
   }, []);
+
+  // Ti lista xriston ti fernoume MONO an o syndedemenos exei dikaioma na ti dei.
+  // O texnikos den exei prosvasi sto /api/users - gi' auton deixnoume mono
+  // to koumpi "Ανάθεση σε εμένα" parakato.
+  useEffect(() => {
+    if (!canManageUsers) return;
+    getUsers()
+      .then((list) => setTechnicians(list.filter((u) => u.active)))
+      .catch(() => setTechnicians([]));
+  }, [canManageUsers]);
 
   function startEditing() {
     setEditForm({
@@ -144,6 +163,19 @@ export default function FaultDetailPage() {
       loadAll();
     } catch (err) {
       toast.error(err.response?.data?.message || "Δεν ήταν δυνατή η αλλαγή κατάστασης");
+    }
+  }
+
+  async function handleAssign(userId) {
+    setAssigning(true);
+    try {
+      await assignFault(id, userId);
+      toast.success(userId ? "Η βλάβη ανατέθηκε" : "Η ανάθεση αφαιρέθηκε");
+      loadAll();
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Δεν ήταν δυνατή η ανάθεση");
+    } finally {
+      setAssigning(false);
     }
   }
 
@@ -327,12 +359,22 @@ export default function FaultDetailPage() {
             <h2 style={{ fontSize: "1.3rem", marginBottom: "0.6rem" }}>{fault.title}</h2>
 
             <div style={{ display: "flex", gap: "1.1rem", flexWrap: "wrap", marginBottom: "0.9rem" }}>
-              <span className="chip">
+              <Link
+                to={`/machines/${fault.machineId}`}
+                className="chip"
+                style={{ textDecoration: "none" }}
+              >
                 <Cog size={12} /> {fault.machineCode} — {fault.machineName}
-              </span>
-              <span className="chip">
+              </Link>
+              <span className="chip" title="Ποιος ανέφερε τη βλάβη">
                 <UserIcon size={12} /> {fault.reportedByUsername}
               </span>
+              {fault.assignedToUsername && (
+                <span className="chip" title="Ποιος είναι υπεύθυνος για την αποκατάσταση">
+                  <UserCheck size={12} /> Ανατέθηκε σε{" "}
+                  {fault.assignedToFullName || fault.assignedToUsername}
+                </span>
+              )}
               <span className="chip">
                 <Clock size={12} /> {new Date(fault.createdAt).toLocaleString("el-GR")}
               </span>
@@ -364,7 +406,92 @@ export default function FaultDetailPage() {
                 </div>
               </>
             )}
+
+            {fault.status !== "CLOSED" && (
+              <>
+                <div className="divider" />
+                {canManageUsers ? (
+                  // Proistamenos / Diefthintis: anathesi se opoiondipote energo xristi
+                  <div className="form-row" style={{ maxWidth: 340, marginBottom: 0 }}>
+                    <label>
+                      <UserCheck size={14} /> Υπεύθυνος αποκατάστασης
+                    </label>
+                    <select
+                      disabled={assigning}
+                      value={fault.assignedToUserId ?? ""}
+                      onChange={(e) =>
+                        handleAssign(e.target.value ? Number(e.target.value) : null)
+                      }
+                    >
+                      <option value="">— Χωρίς ανάθεση —</option>
+                      {technicians.map((t) => (
+                        <option key={t.id} value={t.id}>
+                          {t.fullName} ({t.username})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                ) : (
+                  // Texnikos: mporei mono na "parei" i na "afisei" ti vlavi o idios
+                  <div className="form-actions">
+                    {fault.assignedToUserId === user.id ? (
+                      <button
+                        className="btn secondary"
+                        disabled={assigning}
+                        onClick={() => handleAssign(null)}
+                      >
+                        <X size={15} /> Αφαίρεση της ανάθεσής μου
+                      </button>
+                    ) : (
+                      <button
+                        className="btn secondary"
+                        disabled={assigning || !!fault.assignedToUserId}
+                        title={
+                          fault.assignedToUserId
+                            ? "Η βλάβη έχει ήδη ανατεθεί σε άλλον τεχνικό"
+                            : undefined
+                        }
+                        onClick={() => handleAssign(user.id)}
+                      >
+                        <UserCheck size={15} /> Ανάθεση σε εμένα
+                      </button>
+                    )}
+                  </div>
+                )}
+              </>
+            )}
           </>
+        )}
+      </div>
+
+      <div className="card">
+        <h2>
+          <History size={17} /> Ιστορικό καταστάσεων
+        </h2>
+        {history.length === 0 ? (
+          <EmptyState icon={History} message="Δεν υπάρχουν καταγεγραμμένες αλλαγές." />
+        ) : (
+          <ul className="timeline">
+            {history.map((h) => (
+              <li key={h.id}>
+                <div className="tl-head">
+                  <strong>
+                    {h.fromStatus ? (
+                      <>
+                        {STATUS_LABELS[h.fromStatus]} → {STATUS_LABELS[h.toStatus]}
+                      </>
+                    ) : (
+                      "Καταχώρηση βλάβης"
+                    )}
+                  </strong>
+                  <span>{new Date(h.changedAt).toLocaleString("el-GR")}</span>
+                  <span className="chip">
+                    <UserIcon size={11} /> {h.changedByFullName || h.changedByUsername || "—"}
+                  </span>
+                </div>
+              </li>
+            ))}
+          </ul>
         )}
       </div>
 

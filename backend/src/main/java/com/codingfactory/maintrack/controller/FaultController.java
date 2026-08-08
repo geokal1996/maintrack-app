@@ -27,14 +27,16 @@ public class FaultController {
 
     @Operation(summary = "Λίστα βλαβών με σελιδοποίηση",
             description = "Επιστρέφει μία σελίδα βλαβών, ταξινομημένες από τις πιο πρόσφατες. "
-                    + "Όλα τα φίλτρα είναι προαιρετικά. Το 'q' ψάχνει σε τίτλο, κωδικό και όνομα μηχανής.")
+                    + "Όλα τα φίλτρα είναι προαιρετικά. Το 'q' ψάχνει σε τίτλο, κωδικό και όνομα μηχανής. "
+                    + "Το 'assignedToUserId' φέρνει μόνο τις βλάβες που έχουν ανατεθεί στον συγκεκριμένο χρήστη.")
     @GetMapping
     public PageResponse<FaultResponse> search(@RequestParam(required = false) FaultStatus status,
                                                @RequestParam(required = false) Long machineId,
+                                               @RequestParam(required = false) Long assignedToUserId,
                                                @RequestParam(required = false) String q,
                                                @RequestParam(defaultValue = "0") int page,
                                                @RequestParam(defaultValue = "25") int size) {
-        return faultService.search(status, machineId, q, page, size);
+        return faultService.search(status, machineId, assignedToUserId, q, page, size);
     }
 
     @Operation(summary = "Όλες οι βλάβες χωρίς σελιδοποίηση",
@@ -84,6 +86,23 @@ public class FaultController {
     @PatchMapping("/{id}/status")
     public FaultResponse updateStatus(@PathVariable Long id, @Valid @RequestBody FaultStatusUpdateRequest request) {
         return faultService.updateStatus(id, request.getStatus());
+    }
+
+    @Operation(summary = "Ανάθεση βλάβης σε τεχνικό",
+            description = "Ορίζει ποιος είναι υπεύθυνος για την αποκατάσταση. Στείλτε userId = null "
+                    + "για να αφαιρεθεί η ανάθεση. Ένας ΤΕΧΝΙΚΟΣ μπορεί να αναθέσει βλάβη μόνο στον "
+                    + "εαυτό του· ΠΡΟΪΣΤΑΜΕΝΟΣ και ΔΙΕΥΘΥΝΤΗΣ σε οποιονδήποτε ενεργό χρήστη.")
+    @PatchMapping("/{id}/assignee")
+    public FaultResponse assign(@PathVariable Long id, @RequestBody AssignFaultRequest request) {
+        return faultService.assign(id, request.getUserId());
+    }
+
+    @Operation(summary = "Ιστορικό καταστάσεων της βλάβης",
+            description = "Κάθε αλλαγή κατάστασης, με χρονική σειρά: από ποια κατάσταση, σε ποια, "
+                    + "από ποιον και πότε. Η πρώτη εγγραφή είναι η δημιουργία της βλάβης.")
+    @GetMapping("/{id}/history")
+    public List<StatusChangeResponse> getHistory(@PathVariable Long id) {
+        return faultService.getHistory(id);
     }
 
     @Operation(summary = "Οι ενέργειες συντήρησης μιας βλάβης")

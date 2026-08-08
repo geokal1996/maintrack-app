@@ -11,14 +11,16 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { BarChart3, RefreshCw, TrendingUp, Info } from "lucide-react";
-import { getParetoDashboard } from "../api/statsApi";
+import { getParetoDashboard, getReliability, getTrend } from "../api/statsApi";
 import { useTheme } from "../context/ThemeContext";
-import { SkeletonBlock } from "../components/Skeleton";
+import { SkeletonBlock, SkeletonCards } from "../components/Skeleton";
 import EmptyState from "../components/EmptyState";
+import PeriodFilter, { presetToRange } from "../components/PeriodFilter";
+import ReliabilityCards from "../components/ReliabilityCards";
+import TrendChart from "../components/TrendChart";
 
 // Ena "generiko" Pareto grafima: mples (i timi) + kokkini grammi (to
-// athroistiko %). To idio component to xrisimopoioume kai gia ta 3 diagrammata,
-// allazontas mono ta dedomena/xromata/titlo.
+// athroistiko %). To idio component to xrisimopoioume kai gia ta 3 diagrammata.
 function ParetoChart({ title, subtitle, data, barColor, barName, isDark }) {
   const gridColor = isDark ? "#1f2b45" : "#e2e8f0";
   const axisColor = isDark ? "#94a3b8" : "#64748b";
@@ -46,7 +48,7 @@ function ParetoChart({ title, subtitle, data, barColor, barName, isDark }) {
       )}
 
       {data.length === 0 ? (
-        <EmptyState icon={BarChart3} message="Δεν υπάρχουν ακόμα δεδομένα για αυτό το γράφημα." />
+        <EmptyState icon={BarChart3} message="Δεν υπάρχουν δεδομένα για αυτό το γράφημα στην επιλεγμένη περίοδο." />
       ) : (
         <ResponsiveContainer width="100%" height={330}>
           <ComposedChart data={data} margin={{ top: 10, right: 15, left: -10, bottom: 5 }}>
@@ -107,26 +109,48 @@ function ParetoChart({ title, subtitle, data, barColor, barName, isDark }) {
 export default function ParetoPage() {
   const { isDark } = useTheme();
   const [data, setData] = useState(null);
+  const [reliability, setReliability] = useState(null);
+  const [trend, setTrend] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
+  const [preset, setPreset] = useState("all");
+  const [from, setFrom] = useState("");
+  const [to, setTo] = useState("");
+  const [area, setArea] = useState("");
 
   function loadData() {
     setLoading(true);
     setError("");
-    getParetoDashboard()
-      .then(setData)
+    const filters = { from, to, area };
+
+    Promise.all([getParetoDashboard(filters), getReliability(filters), getTrend(filters)])
+      .then(([pareto, rel, tr]) => {
+        setData(pareto);
+        setReliability(rel);
+        setTrend(tr);
+      })
       .catch(() => setError("Δεν ήταν δυνατή η φόρτωση των στατιστικών"))
       .finally(() => setLoading(false));
   }
 
-  useEffect(loadData, []);
+  useEffect(loadData, [from, to, area]);
+
+  function handlePresetChange(next) {
+    setPreset(next);
+    if (next !== "custom") {
+      const range = presetToRange(next);
+      setFrom(range.from);
+      setTo(range.to);
+    }
+  }
 
   return (
     <div>
       <div className="card-header" style={{ marginBottom: "1.25rem" }}>
         <h1 className="page-title" style={{ margin: 0 }}>
           <BarChart3 size={22} />
-          Pareto Ανάλυση
+          Ανάλυση
           <span className="sub">Ζωντανά από τη βάση</span>
         </h1>
         <button className="btn secondary" onClick={loadData} disabled={loading}>
@@ -135,43 +159,63 @@ export default function ParetoPage() {
         </button>
       </div>
 
-      {loading && (
-        <>
-          <SkeletonBlock height={330} />
-          <div style={{ height: "1.25rem" }} />
-          <SkeletonBlock height={330} />
-        </>
-      )}
+      <PeriodFilter
+        preset={preset}
+        onPresetChange={handlePresetChange}
+        from={from}
+        to={to}
+        onFromChange={setFrom}
+        onToChange={setTo}
+        area={area}
+        onAreaChange={setArea}
+        availableAreas={data?.availableAreas || []}
+        totalFaults={data?.totalFaults}
+      />
 
       {error && <p className="error-text">{error}</p>}
 
-      {!loading && data && (
+      {loading ? (
         <>
-          <ParetoChart
-            title="Χρόνος Διακοπής ανά Μηχανή"
-            subtitle="Ποιες μηχανές ευθύνονται για τον περισσότερο χαμένο χρόνο παραγωγής (σε λεπτά)."
-            data={data.downtimeByMachine}
-            barColor="#4f46e5"
-            barName="Λεπτά διακοπής"
-            isDark={isDark}
-          />
-          <ParetoChart
-            title="Αριθμός Βλαβών ανά Μηχανή"
-            subtitle="Ποιες μηχανές παρουσιάζουν τις περισσότερες βλάβες, ανεξάρτητα από τη διάρκειά τους."
-            data={data.faultsByMachine}
-            barColor="#0891b2"
-            barName="Αριθμός βλαβών"
-            isDark={isDark}
-          />
-          <ParetoChart
-            title="Βλάβες ανά Σοβαρότητα"
-            subtitle="Κατανομή του συνόλου των βλαβών ανά επίπεδο σοβαρότητας."
-            data={data.faultsBySeverity}
-            barColor="#7c3aed"
-            barName="Αριθμός βλαβών"
-            isDark={isDark}
-          />
+          <SkeletonCards count={3} />
+          <div style={{ height: "1.25rem" }} />
+          <SkeletonBlock height={300} />
+          <div style={{ height: "1.25rem" }} />
+          <SkeletonBlock height={330} />
         </>
+      ) : (
+        data && (
+          <>
+            <ReliabilityCards data={reliability} />
+
+            <div style={{ height: "1.25rem" }} />
+            <TrendChart data={trend} isDark={isDark} />
+
+            <ParetoChart
+              title="Χρόνος Διακοπής ανά Μηχανή"
+              subtitle="Ποιες μηχανές ευθύνονται για τον περισσότερο χαμένο χρόνο παραγωγής (σε λεπτά)."
+              data={data.downtimeByMachine}
+              barColor="#4f46e5"
+              barName="Λεπτά διακοπής"
+              isDark={isDark}
+            />
+            <ParetoChart
+              title="Αριθμός Βλαβών ανά Μηχανή"
+              subtitle="Ποιες μηχανές παρουσιάζουν τις περισσότερες βλάβες, ανεξάρτητα από τη διάρκειά τους."
+              data={data.faultsByMachine}
+              barColor="#0891b2"
+              barName="Αριθμός βλαβών"
+              isDark={isDark}
+            />
+            <ParetoChart
+              title="Βλάβες ανά Σοβαρότητα"
+              subtitle="Κατανομή του συνόλου των βλαβών ανά επίπεδο σοβαρότητας."
+              data={data.faultsBySeverity}
+              barColor="#7c3aed"
+              barName="Αριθμός βλαβών"
+              isDark={isDark}
+            />
+          </>
+        )
       )}
     </div>
   );

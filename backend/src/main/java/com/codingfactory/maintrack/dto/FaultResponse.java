@@ -14,6 +14,9 @@ public class FaultResponse {
     private String machineName;
     private Long reportedByUserId;
     private String reportedByUsername;
+    private Long assignedToUserId;
+    private String assignedToUsername;
+    private String assignedToFullName;
     private String title;
     private String description;
     private FaultSeverity severity;
@@ -30,6 +33,11 @@ public class FaultResponse {
         dto.machineName = fault.getMachine().getName();
         dto.reportedByUserId = fault.getReportedBy().getId();
         dto.reportedByUsername = fault.getReportedBy().getUsername();
+        if (fault.getAssignedTo() != null) {
+            dto.assignedToUserId = fault.getAssignedTo().getId();
+            dto.assignedToUsername = fault.getAssignedTo().getUsername();
+            dto.assignedToFullName = fault.getAssignedTo().getFullName();
+        }
         dto.title = fault.getTitle();
         dto.description = fault.getDescription();
         dto.severity = fault.getSeverity();
@@ -62,6 +70,18 @@ public class FaultResponse {
 
     public String getReportedByUsername() {
         return reportedByUsername;
+    }
+
+    public Long getAssignedToUserId() {
+        return assignedToUserId;
+    }
+
+    public String getAssignedToUsername() {
+        return assignedToUsername;
+    }
+
+    public String getAssignedToFullName() {
+        return assignedToFullName;
     }
 
     public String getTitle() {

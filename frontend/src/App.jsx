@@ -6,6 +6,7 @@ import Layout from "./components/Layout";
 import LoginPage from "./pages/LoginPage";
 import DashboardPage from "./pages/DashboardPage";
 import MachinesPage from "./pages/MachinesPage";
+import MachineDetailPage from "./pages/MachineDetailPage";
 import FaultsPage from "./pages/FaultsPage";
 import FaultDetailPage from "./pages/FaultDetailPage";
 import UsersPage from "./pages/UsersPage";
@@ -24,6 +25,7 @@ export default function App() {
             <Route element={<Layout />}>
               <Route path="/" element={<DashboardPage />} />
               <Route path="/machines" element={<MachinesPage />} />
+              <Route path="/machines/:id" element={<MachineDetailPage />} />
               <Route path="/faults" element={<FaultsPage />} />
               <Route path="/faults/:id" element={<FaultDetailPage />} />
               <Route path="/pareto" element={<ParetoPage />} />

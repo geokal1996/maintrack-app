@@ -4,6 +4,7 @@ import com.codingfactory.maintrack.dto.FaultCreateRequest;
 import com.codingfactory.maintrack.dto.FaultResponse;
 import com.codingfactory.maintrack.model.*;
 import com.codingfactory.maintrack.repository.FaultRepository;
+import com.codingfactory.maintrack.repository.FaultStatusChangeRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -36,6 +37,11 @@ class FaultServiceTest {
 
     @Mock
     private UserService userService;
+
+    // Xreiazetai gia to istoriko katastaseon. Xoris auto to mock, to FaultService
+    // tha epairne null kai tha eskage me NullPointerException.
+    @Mock
+    private FaultStatusChangeRepository statusChangeRepository;
 
     @InjectMocks
     private FaultService faultService;

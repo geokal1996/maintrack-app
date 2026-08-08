@@ -145,7 +145,9 @@ public class UserService {
         return auth != null ? auth.getName() : null;
     }
 
-    private User getCurrentUser() {
+    // Dimosio: to xrisimopoiei kai to FaultService gia na katagrapsei POIOS ekane
+    // tin allagi katastasis i tin anathesi.
+    public User getCurrentUser() {
         String username = getCurrentUsername();
         return userRepository.findByUsername(username)
                 .orElseThrow(() -> new ResourceNotFoundException("Δεν βρέθηκε ο συνδεδεμένος χρήστης"));
@@ -153,7 +155,7 @@ public class UserService {
 
     // Diavazei ton rolo TOU SYNDEDEMENOU xristi (auton pou ekane to request), oxi kapoiou allou.
     // O JwtAuthenticationFilter exei idi valei to "ROLE_xxx" san authority otan epalithefsame to token.
-    private Role getCurrentUserRole() {
+    public Role getCurrentUserRole() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         return auth.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)

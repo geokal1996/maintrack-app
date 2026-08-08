@@ -2,6 +2,7 @@ package com.codingfactory.maintrack.config;
 
 import com.codingfactory.maintrack.model.*;
 import com.codingfactory.maintrack.repository.FaultRepository;
+import com.codingfactory.maintrack.repository.FaultStatusChangeRepository;
 import com.codingfactory.maintrack.repository.MachineRepository;
 import com.codingfactory.maintrack.repository.MaintenanceActionRepository;
 import com.codingfactory.maintrack.repository.UserRepository;
@@ -12,7 +13,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 // To CommandLineRunner "trexei" KATHE fora pou ksekinaei i efarmogi.
 // OLES oi metho doi edo einai "idempotent" - dld an ta dedomena YPARXOUN idi, den ta xanadimiourgoun.
@@ -29,17 +32,20 @@ public class DataSeeder implements CommandLineRunner {
     private final MachineRepository machineRepository;
     private final FaultRepository faultRepository;
     private final MaintenanceActionRepository maintenanceActionRepository;
+    private final FaultStatusChangeRepository statusChangeRepository;
     private final PasswordEncoder passwordEncoder;
 
     public DataSeeder(UserRepository userRepository,
                        MachineRepository machineRepository,
                        FaultRepository faultRepository,
                        MaintenanceActionRepository maintenanceActionRepository,
+                       FaultStatusChangeRepository statusChangeRepository,
                        PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.machineRepository = machineRepository;
         this.faultRepository = faultRepository;
         this.maintenanceActionRepository = maintenanceActionRepository;
+        this.statusChangeRepository = statusChangeRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -169,6 +175,28 @@ public class DataSeeder implements CommandLineRunner {
         recalculateStatus(pkg3);
         recalculateStatus(cmp2);
         recalculateStatus(elp1);
+
+        backfillMissingHistory();
+    }
+
+    // Oi vlaves pou katachorithikan PRIN yparxei to istoriko katastaseon (p.x. palia
+    // dedomena i palies eisagoges apo Excel) den exoun kammia grammi istorikou kai
+    // i selida tha fainotan adeia. Tous prosthetoume MIA eggrafi: "dimiourgithike".
+    // Den efevriskoume endiamesa vimata pou den ta kseroume.
+    private void backfillMissingHistory() {
+        Set<Long> withHistory = new HashSet<>(statusChangeRepository.findFaultIdsWithHistory());
+        List<Fault> missing = faultRepository.findAll().stream()
+                .filter(f -> !withHistory.contains(f.getId()))
+                .toList();
+
+        if (missing.isEmpty()) {
+            return;
+        }
+
+        for (Fault f : missing) {
+            addChange(f, null, f.getStatus(), f.getReportedBy(), f.getCreatedAt());
+        }
+        log.info("DataSeeder: symplirothike arxiko istoriko gia {} palies vlaves", missing.size());
     }
 
     private void seedInitialManagerIfNoUsers() {
@@ -234,6 +262,8 @@ public class DataSeeder implements CommandLineRunner {
         // PROSOXI: to @PrePersist tou Fault bazei OPEN MONO an to status einai null -
         // afou to orizoume edo riti, tha meinei o telikos status pou theloume.
         fault.setStatus(finalStatus);
+        // O texnikos pou ekane ti douleia einai kai o ypeuthinos tis vlavis
+        fault.setAssignedTo(technician);
         if (finalStatus == FaultStatus.RESOLVED || finalStatus == FaultStatus.CLOSED) {
             fault.setResolvedAt(LocalDateTime.now());
         }
@@ -247,6 +277,44 @@ public class DataSeeder implements CommandLineRunner {
             action.setDowntimeMinutes(downtimeMinutes);
             maintenanceActionRepository.save(action);
         }
+
+        seedStatusHistory(savedFault, reportedBy, technician, finalStatus);
+    }
+
+    // Ftiaxnei ena logiko istoriko gia tis vlaves tou demo. Oi vlaves tou seeder
+    // dimiourgountai apeftheias sti vasi (oxi meso tou FaultService), opote den tha
+    // eixan kanena istoriko - kai i selida "Ιστορικό καταστάσεων" tha itan adeia.
+    private void seedStatusHistory(Fault fault, User reportedBy, User technician, FaultStatus finalStatus) {
+        User worker = technician != null ? technician : reportedBy;
+        LocalDateTime t = fault.getCreatedAt();
+
+        // Kathe vlavi ksekinaei os ANOIXTI
+        addChange(fault, null, FaultStatus.OPEN, reportedBy, t);
+        if (finalStatus == FaultStatus.OPEN) {
+            return;
+        }
+
+        t = t.plusMinutes(20);
+        addChange(fault, FaultStatus.OPEN, FaultStatus.IN_PROGRESS, worker, t);
+        if (finalStatus == FaultStatus.IN_PROGRESS) {
+            return;
+        }
+
+        t = fault.getResolvedAt() != null ? fault.getResolvedAt() : t.plusHours(1);
+        addChange(fault, FaultStatus.IN_PROGRESS, FaultStatus.RESOLVED, worker, t);
+        if (finalStatus == FaultStatus.RESOLVED) {
+            return;
+        }
+
+        addChange(fault, FaultStatus.RESOLVED, FaultStatus.CLOSED, reportedBy, t.plusMinutes(30));
+    }
+
+    private void addChange(Fault fault, FaultStatus from, FaultStatus to, User by, LocalDateTime when) {
+        FaultStatusChange change = new FaultStatusChange(fault, from, to, by);
+        // Orizoume ritа tin ora - to @PrePersist tha evaze "tora" gia oles tis grammes
+        // kai to istoriko tha emfanizotan me ton idio xrono se kathe vima.
+        change.setChangedAt(when);
+        statusChangeRepository.save(change);
     }
 
     private void recalculateStatus(Machine machine) {

@@ -20,6 +20,18 @@ public class FaultCreateRequest {
     @NotNull(message = "I sovarotita einai ipoxreotiki")
     private FaultSeverity severity;
 
+    // Proairetiko: se poion texniko anatithetai amesos i vlavi.
+    // An meinei keno, i vlavi menei adiathetimeni kai anatithetai argotera.
+    private Long assignedToUserId;
+
+    public Long getAssignedToUserId() {
+        return assignedToUserId;
+    }
+
+    public void setAssignedToUserId(Long assignedToUserId) {
+        this.assignedToUserId = assignedToUserId;
+    }
+
     public Long getMachineId() {
         return machineId;
     }

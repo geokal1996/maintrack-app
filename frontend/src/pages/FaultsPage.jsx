@@ -10,6 +10,7 @@ import {
   ArrowRight,
   CheckCircle2,
   Search,
+  UserCheck,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { searchFaults, createFault } from "../api/faultsApi";
@@ -42,6 +43,8 @@ export default function FaultsPage() {
   const [pageData, setPageData] = useState(null);
   const [machines, setMachines] = useState([]);
   const [statusFilter, setStatusFilter] = useState("");
+  // "Μόνο οι δικές μου": deixnei mono osa exoun anatethei ston syndedemeno xristi
+  const [onlyMine, setOnlyMine] = useState(false);
   const [search, setSearch] = useState("");
   const [appliedSearch, setAppliedSearch] = useState("");
   const [page, setPage] = useState(0);
@@ -53,13 +56,19 @@ export default function FaultsPage() {
 
   function loadFaults() {
     setLoading(true);
-    searchFaults({ status: statusFilter || undefined, q: appliedSearch, page, size })
+    searchFaults({
+      status: statusFilter || undefined,
+      assignedToUserId: onlyMine ? user.id : undefined,
+      q: appliedSearch,
+      page,
+      size,
+    })
       .then(setPageData)
       .catch(() => toast.error("Δεν ήταν δυνατή η φόρτωση των βλαβών"))
       .finally(() => setLoading(false));
   }
 
-  useEffect(loadFaults, [statusFilter, appliedSearch, page, size]);
+  useEffect(loadFaults, [statusFilter, onlyMine, appliedSearch, page, size]);
 
   useEffect(() => {
     getMachines().then(setMachines);
@@ -101,7 +110,7 @@ export default function FaultsPage() {
   }
 
   const faults = pageData?.content || [];
-  const hasFilters = appliedSearch || statusFilter;
+  const hasFilters = appliedSearch || statusFilter || onlyMine;
 
   return (
     <div>
@@ -219,10 +228,22 @@ export default function FaultsPage() {
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
+          <button
+            type="button"
+            className={onlyMine ? "btn small" : "btn secondary small"}
+            style={{ alignSelf: "flex-end" }}
+            onClick={() => {
+              setOnlyMine((v) => !v);
+              setPage(0);
+            }}
+            title="Δείχνει μόνο τις βλάβες που έχουν ανατεθεί σε εμένα"
+          >
+            <UserCheck size={15} /> Ανατεθειμένες σε εμένα
+          </button>
         </div>
 
         {loading ? (
-          <SkeletonTable rows={8} cols={5} />
+          <SkeletonTable rows={8} cols={6} />
         ) : faults.length === 0 ? (
           <EmptyState
             icon={CheckCircle2}
@@ -238,6 +259,7 @@ export default function FaultsPage() {
                     <th>Τίτλος</th>
                     <th>Σοβαρότητα</th>
                     <th>Κατάσταση</th>
+                    <th>Ανατέθηκε σε</th>
                     <th>Δημιουργήθηκε</th>
                     <th></th>
                   </tr>
@@ -256,6 +278,13 @@ export default function FaultsPage() {
                         <span className={`badge dot status-${f.status}`}>
                           {STATUS_LABELS[f.status]}
                         </span>
+                      </td>
+                      <td>
+                        {f.assignedToUsername ? (
+                          f.assignedToFullName || f.assignedToUsername
+                        ) : (
+                          <span className="muted">—</span>
+                        )}
                       </td>
                       <td className="muted">{new Date(f.createdAt).toLocaleString("el-GR")}</td>
                       <td>

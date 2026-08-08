@@ -8,6 +8,12 @@ export function getMachine(id) {
   return apiClient.get(`/api/machines/${id}`).then((res) => res.data);
 }
 
+export function getMachineAreas() {
+  return apiClient.get("/api/machines").then((res) =>
+    [...new Set(res.data.map((m) => m.area).filter(Boolean))].sort()
+  );
+}
+
 export function createMachine(machine) {
   return apiClient.post("/api/machines", machine).then((res) => res.data);
 }

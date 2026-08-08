@@ -53,7 +53,7 @@ export default function Layout() {
     { to: "/", label: "Dashboard", icon: LayoutDashboard, end: true },
     { to: "/machines", label: "Μηχανές", icon: Cog },
     { to: "/faults", label: "Βλάβες", icon: AlertTriangle },
-    { to: "/pareto", label: "Pareto", icon: BarChart3 },
+    { to: "/pareto", label: "Ανάλυση", icon: BarChart3 },
     ...(canManageUsers ? [{ to: "/users", label: "Χρήστες", icon: Users }] : []),
   ];
 
