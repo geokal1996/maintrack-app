@@ -2,6 +2,7 @@ package com.codingfactory.maintrack.service;
 
 import com.codingfactory.maintrack.dto.MaintenanceActionRequest;
 import com.codingfactory.maintrack.dto.MaintenanceActionResponse;
+import com.codingfactory.maintrack.exception.ResourceNotFoundException;
 import com.codingfactory.maintrack.model.Fault;
 import com.codingfactory.maintrack.model.FaultStatus;
 import com.codingfactory.maintrack.model.MaintenanceAction;
@@ -57,5 +58,33 @@ public class MaintenanceActionService {
         }
 
         return MaintenanceActionResponse.from(saved);
+    }
+
+    // Diorthosi mias energeias (p.x. lathos xronos diakopis). Den allazoume ton
+    // texniko - auto pou egine, egine apo sygkekrimeno atomo.
+    public MaintenanceActionResponse update(Long faultId, Long actionId, MaintenanceActionRequest request) {
+        MaintenanceAction action = findEntityById(actionId);
+
+        // Prostasia: i energeia prepei na anikei ONTOS sti vlavi pou zitithike
+        if (!action.getFault().getId().equals(faultId)) {
+            throw new ResourceNotFoundException("Η ενέργεια δεν ανήκει σε αυτή τη βλάβη");
+        }
+
+        action.setDescription(request.getDescription());
+        action.setDowntimeMinutes(request.getDowntimeMinutes());
+        return MaintenanceActionResponse.from(actionRepository.save(action));
+    }
+
+    public void delete(Long faultId, Long actionId) {
+        MaintenanceAction action = findEntityById(actionId);
+        if (!action.getFault().getId().equals(faultId)) {
+            throw new ResourceNotFoundException("Η ενέργεια δεν ανήκει σε αυτή τη βλάβη");
+        }
+        actionRepository.delete(action);
+    }
+
+    private MaintenanceAction findEntityById(Long id) {
+        return actionRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Δεν βρέθηκε ενέργεια με id " + id));
     }
 }

@@ -12,9 +12,10 @@ import {
   Search,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
-import { getFaults, createFault } from "../api/faultsApi";
+import { searchFaults, createFault } from "../api/faultsApi";
 import { getMachines } from "../api/machinesApi";
 import ExcelImportPanel from "../components/ExcelImportPanel";
+import Pagination from "../components/Pagination";
 import { SkeletonTable } from "../components/Skeleton";
 import EmptyState from "../components/EmptyState";
 
@@ -38,10 +39,13 @@ const emptyForm = { machineId: "", title: "", description: "", severity: "MEDIUM
 
 export default function FaultsPage() {
   const { user, canManageUsers } = useAuth();
-  const [faults, setFaults] = useState([]);
+  const [pageData, setPageData] = useState(null);
   const [machines, setMachines] = useState([]);
   const [statusFilter, setStatusFilter] = useState("");
   const [search, setSearch] = useState("");
+  const [appliedSearch, setAppliedSearch] = useState("");
+  const [page, setPage] = useState(0);
+  const [size, setSize] = useState(25);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState(emptyForm);
@@ -49,16 +53,27 @@ export default function FaultsPage() {
 
   function loadFaults() {
     setLoading(true);
-    getFaults(statusFilter ? { status: statusFilter } : {})
-      .then(setFaults)
+    searchFaults({ status: statusFilter || undefined, q: appliedSearch, page, size })
+      .then(setPageData)
+      .catch(() => toast.error("Δεν ήταν δυνατή η φόρτωση των βλαβών"))
       .finally(() => setLoading(false));
   }
 
-  useEffect(loadFaults, [statusFilter]);
+  useEffect(loadFaults, [statusFilter, appliedSearch, page, size]);
 
   useEffect(() => {
     getMachines().then(setMachines);
   }, []);
+
+  // I anazitisi den trexei se kathe pliktrologisi - perimenei 400ms afou stamatisei
+  // na grafei o xristis. Alliws tha stelname ena request ana grama.
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setAppliedSearch(search.trim());
+      setPage(0);
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [search]);
 
   async function handleCreate(e) {
     e.preventDefault();
@@ -74,6 +89,7 @@ export default function FaultsPage() {
       toast.success("Η βλάβη καταχωρήθηκε");
       setForm(emptyForm);
       setShowForm(false);
+      setPage(0);
       loadFaults();
     } catch (err) {
       toast.error(
@@ -84,20 +100,15 @@ export default function FaultsPage() {
     }
   }
 
-  const filtered = faults.filter((f) => {
-    const q = search.trim().toLowerCase();
-    if (!q) return true;
-    return [f.title, f.machineCode, f.machineName]
-      .filter(Boolean)
-      .some((v) => v.toLowerCase().includes(q));
-  });
+  const faults = pageData?.content || [];
+  const hasFilters = appliedSearch || statusFilter;
 
   return (
     <div>
       <h1 className="page-title">
         <AlertTriangle size={22} />
         Βλάβες
-        <span className="sub">{faults.length} εγγραφές</span>
+        <span className="sub">{pageData ? `${pageData.totalElements} εγγραφές` : ""}</span>
       </h1>
 
       <div className="card">
@@ -172,8 +183,7 @@ export default function FaultsPage() {
         )}
       </div>
 
-      {/* I mazikí eisagogí einai dikaioma SUPERVISOR/MANAGER - to idio pou
-          xrisimopoioume kai gia ti diaxeirisi xriston (canManageUsers). */}
+      {/* I mazikí eisagogí einai dikaioma SUPERVISOR/MANAGER */}
       {canManageUsers && <ExcelImportPanel onImported={loadFaults} />}
 
       <div className="card">
@@ -183,7 +193,13 @@ export default function FaultsPage() {
               <Filter size={13} style={{ verticalAlign: -2, marginRight: 4 }} />
               Κατάσταση
             </label>
-            <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+            <select
+              value={statusFilter}
+              onChange={(e) => {
+                setStatusFilter(e.target.value);
+                setPage(0);
+              }}
+            >
               <option value="">Όλες</option>
               {STATUSES.map((s) => (
                 <option key={s} value={s}>
@@ -206,58 +222,68 @@ export default function FaultsPage() {
         </div>
 
         {loading ? (
-          <SkeletonTable rows={6} cols={5} />
-        ) : filtered.length === 0 ? (
+          <SkeletonTable rows={8} cols={5} />
+        ) : faults.length === 0 ? (
           <EmptyState
             icon={CheckCircle2}
-            message={
-              search || statusFilter
-                ? "Καμία βλάβη δεν ταιριάζει με τα φίλτρα."
-                : "Δεν βρέθηκαν βλάβες."
-            }
+            message={hasFilters ? "Καμία βλάβη δεν ταιριάζει με τα φίλτρα." : "Δεν βρέθηκαν βλάβες."}
           />
         ) : (
-          <div className="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>Μηχανή</th>
-                  <th>Τίτλος</th>
-                  <th>Σοβαρότητα</th>
-                  <th>Κατάσταση</th>
-                  <th>Δημιουργήθηκε</th>
-                  <th></th>
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.map((f) => (
-                  <tr key={f.id}>
-                    <td className={`sev-cell sev-${f.severity} mono`}>{f.machineCode}</td>
-                    <td>{f.title}</td>
-                    <td>
-                      <span className={`badge severity-${f.severity}`}>
-                        {SEVERITY_LABELS[f.severity]}
-                      </span>
-                    </td>
-                    <td>
-                      <span className={`badge dot status-${f.status}`}>
-                        {STATUS_LABELS[f.status]}
-                      </span>
-                    </td>
-                    <td className="muted">{new Date(f.createdAt).toLocaleString("el-GR")}</td>
-                    <td>
-                      <Link
-                        to={`/faults/${f.id}`}
-                        style={{ display: "inline-flex", alignItems: "center", gap: 4 }}
-                      >
-                        Λεπτομέρειες <ArrowRight size={14} />
-                      </Link>
-                    </td>
+          <>
+            <div className="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Μηχανή</th>
+                    <th>Τίτλος</th>
+                    <th>Σοβαρότητα</th>
+                    <th>Κατάσταση</th>
+                    <th>Δημιουργήθηκε</th>
+                    <th></th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {faults.map((f) => (
+                    <tr key={f.id}>
+                      <td className={`sev-cell sev-${f.severity} mono`}>{f.machineCode}</td>
+                      <td>{f.title}</td>
+                      <td>
+                        <span className={`badge severity-${f.severity}`}>
+                          {SEVERITY_LABELS[f.severity]}
+                        </span>
+                      </td>
+                      <td>
+                        <span className={`badge dot status-${f.status}`}>
+                          {STATUS_LABELS[f.status]}
+                        </span>
+                      </td>
+                      <td className="muted">{new Date(f.createdAt).toLocaleString("el-GR")}</td>
+                      <td>
+                        <Link
+                          to={`/faults/${f.id}`}
+                          style={{ display: "inline-flex", alignItems: "center", gap: 4 }}
+                        >
+                          Λεπτομέρειες <ArrowRight size={14} />
+                        </Link>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <Pagination
+              page={pageData.page}
+              totalPages={pageData.totalPages}
+              totalElements={pageData.totalElements}
+              size={pageData.size}
+              onPageChange={setPage}
+              onSizeChange={(s) => {
+                setSize(s);
+                setPage(0);
+              }}
+            />
+          </>
         )}
       </div>
     </div>

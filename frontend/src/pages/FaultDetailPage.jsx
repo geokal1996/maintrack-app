@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import {
   ArrowLeft,
@@ -11,11 +11,25 @@ import {
   ChevronRight,
   CalendarCheck,
   FileSpreadsheet,
+  Pencil,
+  Trash2,
+  X,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
-import { getFault, updateFaultStatus, getFaultActions, addFaultAction } from "../api/faultsApi";
+import {
+  getFault,
+  updateFault,
+  deleteFault,
+  updateFaultStatus,
+  getFaultActions,
+  addFaultAction,
+  updateFaultAction,
+  deleteFaultAction,
+} from "../api/faultsApi";
+import { getMachines } from "../api/machinesApi";
 import { SkeletonBlock } from "../components/Skeleton";
 import EmptyState from "../components/EmptyState";
+import { confirmToast } from "../components/confirmToast";
 
 // Poies allages katastasis epitrepontai apo poy - taeriazei me ti logiki tou backend
 const NEXT_STATUSES = {
@@ -37,17 +51,29 @@ const SEVERITY_LABELS = {
   HIGH: "Υψηλή",
   CRITICAL: "Κρίσιμη",
 };
+const SEVERITIES = ["LOW", "MEDIUM", "HIGH", "CRITICAL"];
 
 const emptyActionForm = { description: "", downtimeMinutes: "" };
 
 export default function FaultDetailPage() {
   const { id } = useParams();
-  const { user } = useAuth();
+  const { user, isManager } = useAuth();
+  const navigate = useNavigate();
+
   const [fault, setFault] = useState(null);
   const [actions, setActions] = useState([]);
+  const [machines, setMachines] = useState([]);
   const [loading, setLoading] = useState(true);
+
   const [actionForm, setActionForm] = useState(emptyActionForm);
   const [saving, setSaving] = useState(false);
+
+  const [editing, setEditing] = useState(false);
+  const [editForm, setEditForm] = useState(null);
+
+  // Poia energeia epexergazomaste tin ora auti (id i null)
+  const [editingActionId, setEditingActionId] = useState(null);
+  const [actionEditForm, setActionEditForm] = useState(emptyActionForm);
 
   function loadAll() {
     setLoading(true);
@@ -60,6 +86,56 @@ export default function FaultDetailPage() {
   }
 
   useEffect(loadAll, [id]);
+
+  useEffect(() => {
+    getMachines().then(setMachines);
+  }, []);
+
+  function startEditing() {
+    setEditForm({
+      machineId: String(fault.machineId),
+      title: fault.title,
+      description: fault.description || "",
+      severity: fault.severity,
+    });
+    setEditing(true);
+  }
+
+  async function handleSaveEdit(e) {
+    e.preventDefault();
+    setSaving(true);
+    try {
+      await updateFault(id, {
+        machineId: Number(editForm.machineId),
+        title: editForm.title,
+        description: editForm.description,
+        severity: editForm.severity,
+      });
+      toast.success("Η βλάβη ενημερώθηκε");
+      setEditing(false);
+      loadAll();
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Δεν ήταν δυνατή η ενημέρωση");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleDeleteFault() {
+    const ok = await confirmToast(
+      `Να διαγραφεί οριστικά η βλάβη «${fault.title}»; Θα χαθούν και οι ${actions.length} ενέργειες συντήρησής της.`,
+      { confirmLabel: "Διαγραφή" }
+    );
+    if (!ok) return;
+
+    try {
+      await deleteFault(id);
+      toast.success("Η βλάβη διαγράφηκε");
+      navigate("/faults");
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Δεν ήταν δυνατή η διαγραφή");
+    }
+  }
 
   async function handleStatusChange(newStatus) {
     try {
@@ -90,6 +166,46 @@ export default function FaultDetailPage() {
     }
   }
 
+  function startEditingAction(action) {
+    setEditingActionId(action.id);
+    setActionEditForm({
+      description: action.description || "",
+      downtimeMinutes: action.downtimeMinutes ?? "",
+    });
+  }
+
+  async function handleSaveAction(actionId) {
+    try {
+      await updateFaultAction(id, actionId, {
+        technicianUserId: user.id,
+        description: actionEditForm.description,
+        downtimeMinutes: actionEditForm.downtimeMinutes
+          ? Number(actionEditForm.downtimeMinutes)
+          : null,
+      });
+      toast.success("Η ενέργεια ενημερώθηκε");
+      setEditingActionId(null);
+      loadAll();
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Δεν ήταν δυνατή η ενημέρωση");
+    }
+  }
+
+  async function handleDeleteAction(action) {
+    const ok = await confirmToast("Να διαγραφεί αυτή η ενέργεια συντήρησης;", {
+      confirmLabel: "Διαγραφή",
+    });
+    if (!ok) return;
+
+    try {
+      await deleteFaultAction(id, action.id);
+      toast.success("Η ενέργεια διαγράφηκε");
+      loadAll();
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Δεν ήταν δυνατή η διαγραφή");
+    }
+  }
+
   if (loading) {
     return (
       <div>
@@ -116,54 +232,138 @@ export default function FaultDetailPage() {
       </p>
 
       <div className="card">
-        <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", marginBottom: "0.7rem" }}>
-          <span className={`badge severity-${fault.severity}`}>{SEVERITY_LABELS[fault.severity]}</span>
-          <span className={`badge dot status-${fault.status}`}>{STATUS_LABELS[fault.status]}</span>
-          {fault.externalRef && (
-            <span className="chip">
-              <FileSpreadsheet size={12} /> SAP #{fault.externalRef}
-            </span>
-          )}
-        </div>
-
-        <h2 style={{ fontSize: "1.3rem", marginBottom: "0.6rem" }}>{fault.title}</h2>
-
-        <div style={{ display: "flex", gap: "1.1rem", flexWrap: "wrap", marginBottom: "0.9rem" }}>
-          <span className="chip">
-            <Cog size={12} /> {fault.machineCode} — {fault.machineName}
-          </span>
-          <span className="chip">
-            <UserIcon size={12} /> {fault.reportedByUsername}
-          </span>
-          <span className="chip">
-            <Clock size={12} /> {new Date(fault.createdAt).toLocaleString("el-GR")}
-          </span>
-          {fault.resolvedAt && (
-            <span className="chip">
-              <CalendarCheck size={12} /> Λύθηκε {new Date(fault.resolvedAt).toLocaleString("el-GR")}
-            </span>
-          )}
-          {totalDowntime > 0 && (
-            <span className="chip">
-              <Wrench size={12} /> Σύνολο διακοπής {totalDowntime}′
-            </span>
-          )}
-        </div>
-
-        <p style={{ lineHeight: 1.6, margin: 0 }}>
-          {fault.description || <span className="muted">Χωρίς περιγραφή</span>}
-        </p>
-
-        {nextOptions.length > 0 && (
-          <>
-            <div className="divider" />
-            <div className="form-actions">
-              {nextOptions.map((s) => (
-                <button key={s} className="btn secondary" onClick={() => handleStatusChange(s)}>
-                  Αλλαγή σε «{STATUS_LABELS[s]}» <ChevronRight size={15} />
-                </button>
-              ))}
+        {editing ? (
+          <form onSubmit={handleSaveEdit}>
+            <div className="card-header" style={{ marginBottom: "0.8rem" }}>
+              <h2 style={{ margin: 0 }}>
+                <Pencil size={17} /> Επεξεργασία βλάβης
+              </h2>
+              <button type="button" className="btn ghost small" onClick={() => setEditing(false)}>
+                <X size={15} /> Ακύρωση
+              </button>
             </div>
+
+            <div className="form-grid">
+              <div className="form-row">
+                <label>Μηχανή</label>
+                <select
+                  required
+                  value={editForm.machineId}
+                  onChange={(e) => setEditForm({ ...editForm, machineId: e.target.value })}
+                >
+                  {machines.map((m) => (
+                    <option key={m.id} value={m.id}>
+                      {m.code} — {m.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="form-row">
+                <label>Σοβαρότητα</label>
+                <select
+                  value={editForm.severity}
+                  onChange={(e) => setEditForm({ ...editForm, severity: e.target.value })}
+                >
+                  {SEVERITIES.map((s) => (
+                    <option key={s} value={s}>
+                      {SEVERITY_LABELS[s]}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <div className="form-row">
+              <label>Τίτλος</label>
+              <input
+                required
+                value={editForm.title}
+                onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
+              />
+            </div>
+            <div className="form-row">
+              <label>Περιγραφή</label>
+              <textarea
+                rows={3}
+                value={editForm.description}
+                onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
+              />
+            </div>
+            <div className="form-actions">
+              <button className="btn" type="submit" disabled={saving}>
+                <Save size={16} />
+                {saving ? "Αποθήκευση..." : "Αποθήκευση"}
+              </button>
+            </div>
+          </form>
+        ) : (
+          <>
+            <div className="card-header" style={{ marginBottom: "0.7rem" }}>
+              <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+                <span className={`badge severity-${fault.severity}`}>
+                  {SEVERITY_LABELS[fault.severity]}
+                </span>
+                <span className={`badge dot status-${fault.status}`}>
+                  {STATUS_LABELS[fault.status]}
+                </span>
+                {fault.externalRef && (
+                  <span className="chip">
+                    <FileSpreadsheet size={12} /> Εξωτ. κωδικός {fault.externalRef}
+                  </span>
+                )}
+              </div>
+
+              <div style={{ display: "flex", gap: "0.4rem" }}>
+                <button className="btn ghost small" onClick={startEditing} title="Επεξεργασία">
+                  <Pencil size={15} /> Επεξεργασία
+                </button>
+                {isManager && (
+                  <button className="btn ghost small" onClick={handleDeleteFault} title="Διαγραφή">
+                    <Trash2 size={15} />
+                  </button>
+                )}
+              </div>
+            </div>
+
+            <h2 style={{ fontSize: "1.3rem", marginBottom: "0.6rem" }}>{fault.title}</h2>
+
+            <div style={{ display: "flex", gap: "1.1rem", flexWrap: "wrap", marginBottom: "0.9rem" }}>
+              <span className="chip">
+                <Cog size={12} /> {fault.machineCode} — {fault.machineName}
+              </span>
+              <span className="chip">
+                <UserIcon size={12} /> {fault.reportedByUsername}
+              </span>
+              <span className="chip">
+                <Clock size={12} /> {new Date(fault.createdAt).toLocaleString("el-GR")}
+              </span>
+              {fault.resolvedAt && (
+                <span className="chip">
+                  <CalendarCheck size={12} /> Λύθηκε {new Date(fault.resolvedAt).toLocaleString("el-GR")}
+                </span>
+              )}
+              {totalDowntime > 0 && (
+                <span className="chip">
+                  <Wrench size={12} /> Σύνολο διακοπής {totalDowntime}′
+                </span>
+              )}
+            </div>
+
+            <p style={{ lineHeight: 1.6, margin: 0 }}>
+              {fault.description || <span className="muted">Χωρίς περιγραφή</span>}
+            </p>
+
+            {nextOptions.length > 0 && (
+              <>
+                <div className="divider" />
+                <div className="form-actions">
+                  {nextOptions.map((s) => (
+                    <button key={s} className="btn secondary" onClick={() => handleStatusChange(s)}>
+                      Αλλαγή σε «{STATUS_LABELS[s]}» <ChevronRight size={15} />
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
           </>
         )}
       </div>
@@ -183,16 +383,71 @@ export default function FaultDetailPage() {
           <ul className="timeline">
             {actions.map((a) => (
               <li key={a.id}>
-                <div className="tl-head">
-                  <strong>{a.technicianUsername}</strong>
-                  <span>{new Date(a.actionDate).toLocaleString("el-GR")}</span>
-                  {a.downtimeMinutes != null && (
-                    <span className="chip">
-                      <Clock size={11} /> {a.downtimeMinutes}′ διακοπή
-                    </span>
-                  )}
-                </div>
-                <div className="tl-body">{a.description}</div>
+                {editingActionId === a.id ? (
+                  <div>
+                    <div className="form-row">
+                      <label>Περιγραφή</label>
+                      <textarea
+                        rows={2}
+                        value={actionEditForm.description}
+                        onChange={(e) =>
+                          setActionEditForm({ ...actionEditForm, description: e.target.value })
+                        }
+                      />
+                    </div>
+                    <div className="form-row" style={{ maxWidth: 220 }}>
+                      <label>Διάρκεια διακοπής (λεπτά)</label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={actionEditForm.downtimeMinutes}
+                        onChange={(e) =>
+                          setActionEditForm({ ...actionEditForm, downtimeMinutes: e.target.value })
+                        }
+                      />
+                    </div>
+                    <div className="form-actions">
+                      <button className="btn small" onClick={() => handleSaveAction(a.id)}>
+                        <Save size={14} /> Αποθήκευση
+                      </button>
+                      <button
+                        className="btn secondary small"
+                        onClick={() => setEditingActionId(null)}
+                      >
+                        Ακύρωση
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <div className="tl-head">
+                      <strong>{a.technicianUsername}</strong>
+                      <span>{new Date(a.actionDate).toLocaleString("el-GR")}</span>
+                      {a.downtimeMinutes != null && (
+                        <span className="chip">
+                          <Clock size={11} /> {a.downtimeMinutes}′ διακοπή
+                        </span>
+                      )}
+                      <span style={{ marginLeft: "auto", display: "flex", gap: "0.2rem" }}>
+                        <button
+                          className="btn ghost small"
+                          onClick={() => startEditingAction(a)}
+                          title="Επεξεργασία"
+                        >
+                          <Pencil size={13} />
+                        </button>
+                        <button
+                          className="btn ghost small"
+                          onClick={() => handleDeleteAction(a)}
+                          title="Διαγραφή"
+                        >
+                          <Trash2 size={13} />
+                        </button>
+                      </span>
+                    </div>
+                    <div className="tl-body">{a.description}</div>
+                  </>
+                )}
               </li>
             ))}
           </ul>

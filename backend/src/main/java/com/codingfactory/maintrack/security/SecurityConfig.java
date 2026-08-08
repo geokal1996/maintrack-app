@@ -109,6 +109,10 @@ public class SecurityConfig {
                         // PROSOXI: prepei na einai PANO apo to .anyRequest(), alliws den tha efarmostei.
                         .requestMatchers("/api/faults/import/**").hasAnyRole("SUPERVISOR", "MANAGER")
 
+                        // Diagrafi vlavis -> MONO MANAGER. Einai i pio "epikindini" energeia
+                        // stis vlaves: xanetai kai to istoriko sintirisis mazi tis.
+                        .requestMatchers(HttpMethod.DELETE, "/api/faults/*").hasRole("MANAGER")
+
                         // Ola ta alla (GET machines, faults, actions...) -> aploustata na eisai syndedemenos
                         .anyRequest().authenticated()
                 )

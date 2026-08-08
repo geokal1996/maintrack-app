@@ -968,6 +968,48 @@ button.btn:disabled {
   margin: 1.1rem 0;
 }
 
+/* --- Selidopoiisi --- */
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-top: 1rem;
+  padding-top: 0.9rem;
+  border-top: 1px solid var(--border);
+}
+
+.pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  flex-wrap: wrap;
+}
+
+.pagination-controls button.btn.small {
+  min-width: 34px;
+  padding: 0.35rem 0.55rem;
+}
+
+.page-size {
+  padding: 0.4rem 0.55rem;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 0.82rem;
+}
+
+@media (max-width: 640px) {
+  .pagination {
+    justify-content: center;
+    text-align: center;
+  }
+}
+
 /* ---------------- Login ---------------- */
 
 /* Othoni syndesis: skouro viomixaniko fonto (blueprint me grannazia, solines,

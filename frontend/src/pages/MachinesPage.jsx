@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
-import { Cog, Plus, X, Trash2, Save, Search } from "lucide-react";
+import { Cog, Plus, X, Trash2, Save, Search, Pencil } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
-import { getMachines, createMachine, deleteMachine } from "../api/machinesApi";
+import { getMachines, createMachine, updateMachine, deleteMachine } from "../api/machinesApi";
 import { SkeletonTable } from "../components/Skeleton";
 import EmptyState from "../components/EmptyState";
 import { confirmToast } from "../components/confirmToast";
@@ -25,6 +25,9 @@ export default function MachinesPage() {
   const [saving, setSaving] = useState(false);
   const [search, setSearch] = useState("");
 
+  // An einai null -> dimiourgia neas. An exei id -> epexergasia yparxousas.
+  const [editingId, setEditingId] = useState(null);
+
   function loadMachines() {
     setLoading(true);
     getMachines()
@@ -34,18 +37,46 @@ export default function MachinesPage() {
 
   useEffect(loadMachines, []);
 
-  async function handleCreate(e) {
+  function startCreating() {
+    setEditingId(null);
+    setForm(emptyForm);
+    setShowForm(true);
+  }
+
+  function startEditing(machine) {
+    setEditingId(machine.id);
+    setForm({
+      code: machine.code,
+      name: machine.name,
+      area: machine.area || "",
+      status: machine.status,
+    });
+    setShowForm(true);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function cancelForm() {
+    setShowForm(false);
+    setEditingId(null);
+    setForm(emptyForm);
+  }
+
+  async function handleSubmit(e) {
     e.preventDefault();
     setSaving(true);
     try {
-      await createMachine(form);
-      toast.success(`Η μηχανή ${form.code} καταχωρήθηκε`);
-      setForm(emptyForm);
-      setShowForm(false);
+      if (editingId) {
+        await updateMachine(editingId, form);
+        toast.success(`Η μηχανή ${form.code} ενημερώθηκε`);
+      } else {
+        await createMachine(form);
+        toast.success(`Η μηχανή ${form.code} καταχωρήθηκε`);
+      }
+      cancelForm();
       loadMachines();
     } catch (err) {
       toast.error(
-        err.response?.data?.message || "Δεν ήταν δυνατή η δημιουργία — έλεγξε τα στοιχεία"
+        err.response?.data?.message || "Δεν ήταν δυνατή η αποθήκευση — έλεγξε τα στοιχεία"
       );
     } finally {
       setSaving(false);
@@ -64,7 +95,10 @@ export default function MachinesPage() {
       toast.success(`Η μηχανή ${machine.code} διαγράφηκε`);
       loadMachines();
     } catch (err) {
-      toast.error(err.response?.data?.message || "Δεν ήταν δυνατή η διαγραφή");
+      toast.error(
+        err.response?.data?.message ||
+          "Δεν ήταν δυνατή η διαγραφή — ίσως έχει καταχωρημένες βλάβες"
+      );
     }
   }
 
@@ -85,8 +119,8 @@ export default function MachinesPage() {
       {canManageMachines && (
         <div className="card">
           <div className="card-header">
-            <h2>Διαχείριση</h2>
-            <button className="btn" onClick={() => setShowForm((s) => !s)}>
+            <h2>{editingId ? "Επεξεργασία μηχανής" : "Διαχείριση"}</h2>
+            <button className="btn" onClick={showForm ? cancelForm : startCreating}>
               {showForm ? <X size={16} /> : <Plus size={16} />}
               {showForm ? "Ακύρωση" : "Νέα μηχανή"}
             </button>
@@ -95,7 +129,7 @@ export default function MachinesPage() {
           {showForm && (
             <>
               <div className="divider" />
-              <form onSubmit={handleCreate}>
+              <form onSubmit={handleSubmit}>
                 <div className="form-grid">
                   <div className="form-row">
                     <label>Κωδικός</label>
@@ -135,6 +169,9 @@ export default function MachinesPage() {
                         </option>
                       ))}
                     </select>
+                    <span className="muted" style={{ fontSize: "0.76rem" }}>
+                      υπολογίζεται αυτόματα από τις βλάβες — άλλαξέ την μόνο για διόρθωση
+                    </span>
                   </div>
                 </div>
                 <div className="form-actions">
@@ -180,7 +217,7 @@ export default function MachinesPage() {
                   <th>Όνομα</th>
                   <th>Περιοχή</th>
                   <th>Κατάσταση</th>
-                  {canDeleteMachines && <th></th>}
+                  {canManageMachines && <th></th>}
                 </tr>
               </thead>
               <tbody>
@@ -192,11 +229,24 @@ export default function MachinesPage() {
                     <td>
                       <span className={`badge dot status-${m.status}`}>{STATUS_LABELS[m.status]}</span>
                     </td>
-                    {canDeleteMachines && (
-                      <td style={{ textAlign: "right" }}>
-                        <button className="btn ghost small" onClick={() => handleDelete(m)} title="Διαγραφή">
-                          <Trash2 size={15} />
+                    {canManageMachines && (
+                      <td style={{ textAlign: "right", whiteSpace: "nowrap" }}>
+                        <button
+                          className="btn ghost small"
+                          onClick={() => startEditing(m)}
+                          title="Επεξεργασία"
+                        >
+                          <Pencil size={15} />
                         </button>
+                        {canDeleteMachines && (
+                          <button
+                            className="btn ghost small"
+                            onClick={() => handleDelete(m)}
+                            title="Διαγραφή"
+                          >
+                            <Trash2 size={15} />
+                          </button>
+                        )}
                       </td>
                     )}
                   </tr>
