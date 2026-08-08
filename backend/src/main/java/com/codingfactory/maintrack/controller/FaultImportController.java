@@ -3,6 +3,7 @@ package com.codingfactory.maintrack.controller;
 import com.codingfactory.maintrack.dto.ColumnMappingRequest;
 import com.codingfactory.maintrack.dto.ImportPreviewResponse;
 import com.codingfactory.maintrack.dto.ImportResultResponse;
+import com.codingfactory.maintrack.dto.MachineMatchResponse;
 import com.codingfactory.maintrack.exception.ResourceNotFoundException;
 import com.codingfactory.maintrack.model.User;
 import com.codingfactory.maintrack.repository.UserRepository;
@@ -39,6 +40,15 @@ public class FaultImportController {
     @PostMapping(value = "/inspect", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ImportPreviewResponse inspect(@RequestParam("file") MultipartFile file) {
         return faultImportService.inspect(file);
+    }
+
+    // Endiameso vima: "poies mihanes anaferei to arxeio kai se poies dikes mas
+    // antistoixoun;" - epistrefei protaseis pou o xristis epivevaionei i allazei.
+    // DEN grafei tipota sti vasi.
+    @PostMapping(value = "/match-machines", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public MachineMatchResponse matchMachines(@RequestParam("file") MultipartFile file,
+                                               @RequestParam("machineColumn") int machineColumn) {
+        return faultImportService.matchMachines(file, machineColumn);
     }
 
     // 2o vima: i eisagogi. To "mapping" einai PROAIRETIKO - an dothei, i antistoixisi

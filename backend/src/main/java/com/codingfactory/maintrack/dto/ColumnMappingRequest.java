@@ -1,5 +1,7 @@
 package com.codingfactory.maintrack.dto;
 
+import java.util.Map;
+
 // Leei stin efarmogi POIA stili tou arxeiou tou xristi antistoixei se POIO diko mas pedio.
 //
 // Kathe timi einai o ARITHMOS TIS STILIS (0 = i proti stili, 1 = i defteri, k.o.k.)
@@ -20,11 +22,22 @@ public class ColumnMappingRequest {
     private Integer action;
     private Integer downtime;
 
+    // I PRAGMATIKI imerominia tis vlavis. An dothei, i vlavi katagrafetai me AUTI
+    // tin imerominia kai oxi me tin ora tou anevasmatos - alliws ena olokliro
+    // istoriko tha emfanizotan san na symvike simera.
+    private Integer date;
+
     // "MINUTES" i "HOURS" - merika systimata (opos to SAP) dinoun ores anti gia lepta
     private String downtimeUnit = "MINUTES";
 
     // An i mihani den yparxei sti vasi, na dimiourgeitai automata;
     private boolean createMissingMachines = true;
+
+    // Ti apofasise o xristis gia kathe onoma mihanis pou vrethike sto arxeio:
+    //   "Πρέσα 1" -> 5      (na syndethei me tin yparxousa mihani me id 5)
+    //   "Αντλία 2" -> null  (na dimiourgithei nea)
+    // Symplironetai apo ton pinaka epivevaiosis sto frontend.
+    private Map<String, Long> machineResolutions;
 
     public Integer getExternalRef() {
         return externalRef;
@@ -104,6 +117,22 @@ public class ColumnMappingRequest {
 
     public void setDowntime(Integer downtime) {
         this.downtime = downtime;
+    }
+
+    public Integer getDate() {
+        return date;
+    }
+
+    public void setDate(Integer date) {
+        this.date = date;
+    }
+
+    public Map<String, Long> getMachineResolutions() {
+        return machineResolutions;
+    }
+
+    public void setMachineResolutions(Map<String, Long> machineResolutions) {
+        this.machineResolutions = machineResolutions;
     }
 
     public String getDowntimeUnit() {

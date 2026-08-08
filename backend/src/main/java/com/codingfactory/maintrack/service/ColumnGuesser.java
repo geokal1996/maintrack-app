@@ -48,14 +48,17 @@ final class ColumnGuesser {
 
         KEYWORDS.put("downtime", List.of(
                 "χρονοςδιακοπ", "διακοπ", "ωρεςεκτος", "downtime", "breakdowndur", "duration",
-                "διαρκεια", "νεκροςχρονος", "stoppage"));
+                "διαρκεια", "νεκροςχρονος", "stoppage", "χρονος", "λεπτα"));
 
         KEYWORDS.put("action", List.of(
                 "ενεργεια", "εργασια", "αποκαταστ", "επισκευη", "action", "workdone", "remedy"));
 
+        KEYWORDS.put("date", List.of(
+                "ημερομηνια", "ημ/νια", "date", "notifdate", "ημερα", "χρονολογια"));
+
         KEYWORDS.put("description", List.of(
-                "περιγραφη", "λεπτομερ", "σχολια", "παρατηρησ", "description", "longtext",
-                "details", "notes", "comments"));
+                "αιτια", "περιγραφη", "λεπτομερ", "σχολια", "παρατηρησ", "description", "longtext",
+                "details", "notes", "comments", "cause"));
     }
 
     static ColumnMappingRequest guess(List<String> headers) {
@@ -73,11 +76,13 @@ final class ColumnGuesser {
             apply(mapping, entry.getKey(), column);
         }
 
-        // An i stili tou xronou diakopis milaei gia "ores", to simeionoume oste
-        // na ginei i metatropi se lepta kata tin eisagogi.
+        // Monada tou xronou diakopis: an i epikefalida leei "min" i "λεπτά" einai lepta,
+        // an leei "ώρες" i "hours" einai ores (kai tha metatrapoun se lepta).
         if (mapping.getDowntime() != null) {
             String h = normalized.get(mapping.getDowntime());
-            if (h.contains("ωρ") || h.contains("hour") || h.contains("(h)")) {
+            if (h.contains("min") || h.contains("λεπτ")) {
+                mapping.setDowntimeUnit("MINUTES");
+            } else if (h.contains("ωρ") || h.contains("hour") || h.endsWith("h")) {
                 mapping.setDowntimeUnit("HOURS");
             }
         }
@@ -123,6 +128,7 @@ final class ColumnGuesser {
             case "technician" -> m.setTechnician(column);
             case "action" -> m.setAction(column);
             case "downtime" -> m.setDowntime(column);
+            case "date" -> m.setDate(column);
             default -> { /* agnosto pedio - den kanoume tipota */ }
         }
     }
@@ -138,6 +144,8 @@ final class ColumnGuesser {
                 .replace("ό", "ο").replace("ύ", "υ").replace("ώ", "ω")
                 .replace("ϊ", "ι").replace("ΐ", "ι").replace("ϋ", "υ").replace("ΰ", "υ")
                 .replace("ς", "σ");
-        return s.replaceAll("[\\s._\\-/]", "");
+        // Afairoume kai tis parentheseis, oste to "Χρόνος (min)" na ginei "χρονοσmin"
+        // kai na tairiazei me ti lexi-kleidi "χρονος".
+        return s.replaceAll("[\\s._\\-/()\\[\\]]", "");
     }
 }

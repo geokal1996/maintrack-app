@@ -3,6 +3,7 @@ package com.codingfactory.maintrack.service;
 import com.codingfactory.maintrack.dto.ColumnMappingRequest;
 import com.codingfactory.maintrack.dto.ImportPreviewResponse;
 import com.codingfactory.maintrack.dto.ImportResultResponse;
+import com.codingfactory.maintrack.dto.MachineMatchResponse;
 import com.codingfactory.maintrack.model.*;
 import com.codingfactory.maintrack.repository.FaultRepository;
 import com.codingfactory.maintrack.repository.MachineRepository;
@@ -118,6 +119,59 @@ public class FaultImportService {
         }
 
         return preview;
+    }
+
+    // ---------------------------------------------------------------
+    //  ENDIAMESO VIMA: "poies mihanes anaferei to arxeio kai se poies dikes mas
+    //  antistoixoun;" - kaleitai afou o xristis dialexei ti stili tis mihanis.
+    //
+    //  I protasi PAEI PANTA STON XRISTI gia epivevaiosi. DEN grafetai tipota sti
+    //  vasi se auto to vima - gia auto akrivos den einai @Transactional.
+    // ---------------------------------------------------------------
+
+    public MachineMatchResponse matchMachines(MultipartFile file, int machineColumn) {
+        validateFile(file);
+        if (machineColumn < 0) {
+            throw new IllegalArgumentException("Δεν ορίστηκε στήλη μηχανής");
+        }
+
+        // Metrame se poses grammes emfanizetai to kathe onoma, diatirontas ti seira emfanisis
+        Map<String, Integer> occurrences = new LinkedHashMap<>();
+
+        try (InputStream in = file.getInputStream(); Workbook workbook = new XSSFWorkbook(in)) {
+            Sheet sheet = workbook.getSheetAt(0);
+            for (int r = 1; r <= sheet.getLastRowNum(); r++) {
+                Row row = sheet.getRow(r);
+                if (row == null) {
+                    continue;
+                }
+                String value = ExcelCells.str(row, machineColumn);
+                if (value != null) {
+                    occurrences.merge(value, 1, Integer::sum);
+                }
+            }
+        } catch (IOException e) {
+            throw new IllegalArgumentException("Δεν ήταν δυνατή η ανάγνωση του αρχείου Excel");
+        }
+
+        List<Machine> existing = machineRepository.findAll();
+        List<MachineMatchResponse.MachineMatch> matches = new ArrayList<>();
+
+        for (Map.Entry<String, Integer> entry : occurrences.entrySet()) {
+            MachineMatchResponse.MachineMatch match =
+                    new MachineMatchResponse.MachineMatch(entry.getKey(), entry.getValue());
+
+            MachineMatcher.findBest(entry.getKey(), existing).ifPresent(found -> {
+                match.setMachineId(found.machine().getId());
+                match.setMachineCode(found.machine().getCode());
+                match.setMachineName(found.machine().getName());
+                match.setConfidence(found.confidence());
+            });
+
+            matches.add(match);
+        }
+
+        return new MachineMatchResponse(matches);
     }
 
     private void validateFile(MultipartFile file) {
@@ -252,7 +306,12 @@ public class FaultImportService {
             return;
         }
 
-        Optional<Machine> machineOpt = machineRepository.findByCode(data.machineCode);
+        // An o xristis epelexe rita mihani ston pinaka epivevaiosis, ti xrisimopoioume.
+        // Alliws psaxnoume me ton kodiko opos einai grammenos sto arxeio.
+        Optional<Machine> machineOpt = data.resolvedMachineId != null
+                ? machineRepository.findById(data.resolvedMachineId)
+                : machineRepository.findByCode(data.machineCode);
+
         Machine machine;
         if (machineOpt.isPresent()) {
             machine = machineOpt.get();
@@ -285,9 +344,24 @@ public class FaultImportService {
             }
         }
 
+        // Deftero diktyo prostasias, gia arxeia XORIS monadiko kodiko (p.x. to
+        // xeirokinito Excel): idia mihani + idios titlos + idia mera = idia vlavi.
+        if (data.externalRef == null && data.occurredAt != null) {
+            LocalDateTime dayStart = data.occurredAt.toLocalDate().atStartOfDay();
+            boolean alreadyThere = faultRepository.existsByMachineIdAndTitleAndCreatedAtBetween(
+                    machine.getId(), data.title, dayStart, dayStart.plusDays(1).minusNanos(1));
+            if (alreadyThere) {
+                result.setSkipped(result.getSkipped() + 1);
+                return;
+            }
+        }
+
         Fault fault = new Fault();
         fault.setMachine(machine);
         fault.setReportedBy(technician);
+        // I pragmatiki imerominia tis vlavis - to @PrePersist tou Fault vazei "tora"
+        // MONO an afiso to pedio null.
+        fault.setCreatedAt(data.occurredAt);
         fault.setTitle(data.title);
         fault.setDescription(data.description);
         fault.setSeverity(data.severity != null ? data.severity : FaultSeverity.MEDIUM);
@@ -309,6 +383,10 @@ public class FaultImportService {
             action.setTechnician(technician);
             action.setDescription(data.actionDescription != null ? data.actionDescription : "Εισαγωγή από Excel");
             action.setDowntimeMinutes(data.downtimeMinutes);
+            // I energeia na exei tin imerominia tis vlavis, oxi tin ora tou anevasmatos
+            if (data.occurredAt != null) {
+                action.setActionDate(data.occurredAt);
+            }
             maintenanceActionRepository.save(action);
         }
 
@@ -326,6 +404,20 @@ public class FaultImportService {
         d.externalRef = ExcelCells.str(row, orNeg(m.getExternalRef()));
         d.machineCode = ExcelCells.str(row, orNeg(m.getMachineCode()));
         d.machineName = ExcelCells.str(row, orNeg(m.getMachineName()));
+
+        // Ti apofasise o xristis ston pinaka epivevaiosis gia auto to onoma mihanis
+        if (m.getMachineResolutions() != null && d.machineCode != null) {
+            d.resolvedMachineId = m.getMachineResolutions().get(d.machineCode);
+        }
+
+        // I pragmatiki imerominia tis vlavis
+        if (m.getDate() != null) {
+            java.time.LocalDate day = ExcelCells.date(row, m.getDate());
+            if (day != null) {
+                d.occurredAt = day.atStartOfDay();
+            }
+        }
+
         d.title = ExcelCells.str(row, orNeg(m.getTitle()));
         d.description = ExcelCells.str(row, orNeg(m.getDescription()));
         d.technicianUsername = ExcelCells.str(row, orNeg(m.getTechnician()));

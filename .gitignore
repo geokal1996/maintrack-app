@@ -10,8 +10,14 @@
 *.xlsm
 *.csv
 
-# Eksairesi: ta DIKA MAS ypodeigmata, pou exoun MONO fantastika dedomena
-!samples/*.xlsx
+# Eksairesi: MONO ta tessera dika mas ypodeigmata, pou exoun apokleistika
+# FANTASTIKA dedomena. Ta grafoume ONOMA-ONOMA epitides: an grafame "!samples/*.xlsx",
+# tote opoiodipote arxeio erixname sto samples/ tha anevaine - kai arkei mia fora
+# na to kanoume katalathos me pragmatiko arxeio.
+!samples/maintrack-import-demo.xlsx
+!samples/sap-iw29-demo.xlsx
+!samples/agnosti-morfi-demo.xlsx
+!samples/xeirokinito-log-demo.xlsx
 
 # --- Build output ---
 node_modules/

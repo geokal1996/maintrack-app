@@ -10,6 +10,17 @@ export function inspectExcel(file) {
     .then((res) => res.data);
 }
 
+// Endiameso vima: poies mihanes anaferei to arxeio kai se poies dikes mas antistoixoun.
+// Den grafei tipota sti vasi - mono protaseis gia epivevaiosi.
+export function matchMachines(file, machineColumn) {
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("machineColumn", machineColumn);
+  return apiClient
+    .post("/api/faults/import/match-machines", formData)
+    .then((res) => res.data);
+}
+
 // 2o vima: i eisagogi. To "mapping" einai proairetiko - to stelnoume mono otan
 // o xristis exei orisei o idios poia stili einai ti.
 export function importFaultsFromExcel(file, mapping) {

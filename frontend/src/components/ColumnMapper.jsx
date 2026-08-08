@@ -5,6 +5,7 @@ import { AlertCircle, Wand2 } from "lucide-react";
 export const MAPPABLE_FIELDS = [
   { key: "machineCode", label: "Κωδικός μηχανής", required: true, hint: "π.χ. CRL1 ή 6520-HRL-TIPP" },
   { key: "title", label: "Τίτλος βλάβης", required: true, hint: "σύντομη περιγραφή του προβλήματος" },
+  { key: "date", label: "Ημερομηνία βλάβης", required: false, hint: "χωρίς αυτή, όλες οι εγγραφές παίρνουν τη σημερινή ημερομηνία" },
   { key: "externalRef", label: "Μοναδικός κωδικός", required: false, hint: "αποτρέπει διπλοεγγραφές σε δεύτερο ανέβασμα" },
   { key: "machineName", label: "Όνομα μηχανής", required: false, hint: "χρησιμοποιείται αν η μηχανή δημιουργηθεί αυτόματα" },
   { key: "description", label: "Αναλυτική περιγραφή", required: false, hint: "" },

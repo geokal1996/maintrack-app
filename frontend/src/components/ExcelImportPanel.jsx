@@ -16,10 +16,13 @@ import {
 } from "lucide-react";
 import {
   inspectExcel,
+  matchMachines,
   importFaultsFromExcel,
   downloadImportTemplate,
 } from "../api/importApi";
+import { getMachines } from "../api/machinesApi";
 import ColumnMapper, { MAPPABLE_FIELDS } from "./ColumnMapper";
+import MachineMatchTable from "./MachineMatchTable";
 
 // Ti stiles perimenei i kathe gnosti morfi. Emfanizetai sto ptyssomeno panel odigion.
 const TEMPLATE_COLUMNS = [
@@ -100,6 +103,10 @@ export default function ExcelImportPanel({ onImported }) {
   const [result, setResult] = useState(null);
   const [showHelp, setShowHelp] = useState(false);
   const [errorText, setErrorText] = useState("");
+  const [machineMatches, setMachineMatches] = useState(null);
+  const [resolutions, setResolutions] = useState({});
+  const [allMachines, setAllMachines] = useState([]);
+  const [matchingMachines, setMatchingMachines] = useState(false);
   const fileInputRef = useRef(null);
 
   function reset() {
@@ -108,7 +115,34 @@ export default function ExcelImportPanel({ onImported }) {
     setMapping(null);
     setShowMapper(false);
     setErrorText("");
+    setMachineMatches(null);
+    setResolutions({});
     if (fileInputRef.current) fileInputRef.current.value = "";
+  }
+
+  // Zitaei apo to backend protaseis antistoixisis gia ta onomata mihanon tou arxeiou.
+  // Kaleitai otan o xristis exei orisei ti stili tis mihanis.
+  async function loadMachineMatches(chosenFile, machineColumn) {
+    if (chosenFile == null || machineColumn == null) return;
+    setMatchingMachines(true);
+    try {
+      const [data, machines] = await Promise.all([
+        matchMachines(chosenFile, machineColumn),
+        allMachines.length ? Promise.resolve(allMachines) : getMachines(),
+      ]);
+      setAllMachines(machines);
+      setMachineMatches(data.matches);
+      // Prosymplironoume me tis protaseis tou systimatos
+      const initial = {};
+      data.matches.forEach((m) => {
+        initial[m.rawName] = m.machineId ?? null;
+      });
+      setResolutions(initial);
+    } catch (err) {
+      toast.error("Δεν ήταν δυνατή η αντιστοίχιση μηχανών");
+    } finally {
+      setMatchingMachines(false);
+    }
   }
 
   // Molis dialexei arxeio, to steloume gia "anagnorisi" - xoris na apothikefsoume tipota.
@@ -125,11 +159,16 @@ export default function ExcelImportPanel({ onImported }) {
     try {
       const data = await inspectExcel(chosen);
       setPreview(data);
-      setMapping(data.suggestedMapping || {});
+      const suggested = data.suggestedMapping || {};
+      setMapping(suggested);
       // An den anagnorisame ti morfi, anoigoume amesos tin antistoixisi -
-      // einai o monos tropos na proxorisei o xristis.
+      // einai o monos tropos na proxorisei o xristis. Kai fernoume kai tis
+      // protaseis gia tis mihanes, giati ekei einai to megalytero risko lathous.
       if (data.detectedFormat === "UNKNOWN") {
         setShowMapper(true);
+        if (suggested.machineCode != null) {
+          loadMachineMatches(chosen, suggested.machineCode);
+        }
       }
     } catch (err) {
       setErrorText(err.response?.data?.message || "Δεν ήταν δυνατή η ανάγνωση του αρχείου");
@@ -146,7 +185,10 @@ export default function ExcelImportPanel({ onImported }) {
     try {
       // Stelnoume tin antistoixisi MONO an o xristis anoixe to panel -
       // alliws afinoume to backend na anagnorisei moni tou ti morfi.
-      const data = await importFaultsFromExcel(file, showMapper ? mapping : null);
+      const payload = showMapper
+        ? { ...mapping, machineResolutions: machineMatches ? resolutions : undefined }
+        : null;
+      const data = await importFaultsFromExcel(file, payload);
       setResult(data);
       reset();
 
@@ -263,12 +305,37 @@ export default function ExcelImportPanel({ onImported }) {
       )}
 
       {showMapper && preview && mapping && (
-        <ColumnMapper
-          preview={preview}
-          mapping={mapping}
-          onChange={setMapping}
-          autoDetected={preview.detectedFormat !== "UNKNOWN"}
-        />
+        <>
+          <ColumnMapper
+            preview={preview}
+            mapping={mapping}
+            onChange={(next) => {
+              // An allaxe i stili tis mihanis, xreiazomaste nees protaseis antistoixisis
+              if (next.machineCode !== mapping.machineCode) {
+                setMachineMatches(null);
+                setResolutions({});
+                if (next.machineCode != null) {
+                  loadMachineMatches(file, next.machineCode);
+                }
+              }
+              setMapping(next);
+            }}
+            autoDetected={preview.detectedFormat !== "UNKNOWN"}
+          />
+
+          {matchingMachines && (
+            <p className="muted">Ελέγχω ποιες μηχανές υπάρχουν ήδη...</p>
+          )}
+
+          {machineMatches && machineMatches.length > 0 && (
+            <MachineMatchTable
+              matches={machineMatches}
+              resolutions={resolutions}
+              machines={allMachines}
+              onChange={setResolutions}
+            />
+          )}
+        </>
       )}
 
       {showHelp && (

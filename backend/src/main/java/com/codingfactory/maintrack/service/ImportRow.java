@@ -25,6 +25,10 @@ class ImportRow {
     String actionDescription;
     Integer downtimeMinutes;
     LocalDateTime resolvedAt;
+    // I pragmatiki imerominia tis vlavis (an to arxeio ti dinei)
+    LocalDateTime occurredAt;
+    // An o xristis exei epilexei rita se poia yparxousa mihani antistoixei
+    Long resolvedMachineId;
 
     // An mia grammi prepei na agnoithei entelos (p.x. SAP gnostopoiisi me simaia
     // diagrafis DLFL), ti simadevoume etsi anti na petaxoume exception.
