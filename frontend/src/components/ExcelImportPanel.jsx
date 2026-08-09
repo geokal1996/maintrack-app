@@ -35,6 +35,11 @@ const TEMPLATE_COLUMNS = [
   { name: "Τεχνικός (username)", required: false, note: "κενό → ο συνδεδεμένος χρήστης" },
   { name: "Ενέργεια Συντήρησης", required: false, note: "τι έγινε για την αποκατάσταση" },
   { name: "Χρόνος Διακοπής (λεπτά)", required: false, note: "αριθμός σε λεπτά" },
+  {
+    name: "Ημερομηνία Βλάβης",
+    required: false,
+    note: "πότε συνέβη πραγματικά (κενό → σήμερα) — απαραίτητη για ιστορικά δεδομένα",
+  },
 ];
 
 const SAP_COLUMNS = [

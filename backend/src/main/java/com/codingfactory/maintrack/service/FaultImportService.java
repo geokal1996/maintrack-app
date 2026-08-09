@@ -44,11 +44,12 @@ public class FaultImportService {
     private static final int COL_TECHNICIAN = 6;
     private static final int COL_ACTION = 7;
     private static final int COL_DOWNTIME = 8;
+    private static final int COL_DATE = 9;
 
     private static final String[] HEADERS = {
             "Αρ. Γνωστοποίησης", "Κωδικός Μηχανής", "Τίτλος Βλάβης", "Περιγραφή",
             "Σοβαρότητα", "Κατάσταση", "Τεχνικός (username)", "Ενέργεια Συντήρησης",
-            "Χρόνος Διακοπής (λεπτά)"
+            "Χρόνος Διακοπής (λεπτά)", "Ημερομηνία Βλάβης"
     };
 
     private final FaultRepository faultRepository;
@@ -506,6 +507,17 @@ public class FaultImportService {
         d.actionDescription = ExcelCells.str(row, COL_ACTION);
         d.downtimeMinutes = ExcelCells.integer(row, COL_DOWNTIME);
 
+        // I PRAGMATIKI imerominia tis vlavis. Einai PROAIRETIKI: an to keli einai keno,
+        // to occurredAt menei null kai i vlavi pairnei tin ora tou anevasmatos.
+        //
+        // Giati einai simantiki: xoris auti, ena olokliro istoriko dyo eton tha
+        // katagrafotan san na symvike OLO simera - kai to diagramma tasis tha edeixne
+        // mia teratodi mpara ston trexonta mina anti gia tin pragmatiki eikona.
+        java.time.LocalDate day = ExcelCells.date(row, COL_DATE);
+        if (day != null) {
+            d.occurredAt = day.atStartOfDay();
+        }
+
         String severityText = ExcelCells.str(row, COL_SEVERITY);
         if (severityText != null) {
             try {
@@ -578,7 +590,7 @@ public class FaultImportService {
         if (row == null) {
             return true;
         }
-        for (int i = 0; i < Math.max(columnCount, COL_DOWNTIME + 1); i++) {
+        for (int i = 0; i < Math.max(columnCount, HEADERS.length); i++) {
             if (ExcelCells.str(row, i) != null) {
                 return false;
             }
@@ -624,6 +636,11 @@ public class FaultImportService {
             headerFont.setBold(true);
             headerStyle.setFont(headerFont);
 
+            // Stili imerominias: tin dinoume san PRAGMATIKI imerominia Excel (oxi keimeno),
+            // oste otan o xristis grapsei ti diki tou na tin katalavei kai to Excel kai emeis.
+            CellStyle dateStyle = workbook.createCellStyle();
+            dateStyle.setDataFormat(workbook.createDataFormat().getFormat("dd/mm/yyyy"));
+
             Row header = sheet.createRow(0);
             for (int i = 0; i < HEADERS.length; i++) {
                 Cell cell = header.createCell(i);
@@ -642,6 +659,9 @@ public class FaultImportService {
             example1.createCell(6).setCellValue("n.theodorou");
             example1.createCell(7).setCellValue("Αντικατάσταση τσιμούχας");
             example1.createCell(8).setCellValue(45);
+            Cell date1 = example1.createCell(COL_DATE);
+            date1.setCellValue(java.time.LocalDate.now().minusDays(45));
+            date1.setCellStyle(dateStyle);
 
             Row example2 = sheet.createRow(2);
             example2.createCell(0).setCellValue("10000002");
@@ -653,6 +673,9 @@ public class FaultImportService {
             example2.createCell(6).setCellValue("");
             example2.createCell(7).setCellValue("");
             example2.createCell(8).setCellValue("");
+            Cell date2 = example2.createCell(COL_DATE);
+            date2.setCellValue(java.time.LocalDate.now().minusDays(9));
+            date2.setCellStyle(dateStyle);
 
             for (int i = 0; i < HEADERS.length; i++) {
                 sheet.autoSizeColumn(i);
