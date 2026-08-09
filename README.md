@@ -35,19 +35,15 @@
 * trend βλαβών και χρόνου διακοπής,
 * Pareto αναλύσεις.
 
-Η βασική ροή κατάστασης μιας βλάβης είναι:
+Η βασική ροή κατάστασης μιας βλάβης είναι OPEN → IN_PROGRESS → RESOLVED → CLOSED.
 
-```
-OPEN → IN_PROGRESS → RESOLVED → CLOSED
-```
-
-Δεν επιτρέπεται να κλείσει μια βλάβη αν δεν έχει προηγουμένως περάσει σε `RESOLVED`, ενώ κάθε αλλαγή κατάστασης αποθηκεύεται στο ιστορικό της.
+Δεν επιτρέπεται να κλείσει μια βλάβη αν δεν έχει προηγουμένως περάσει σε RESOLVED, ενώ κάθε αλλαγή κατάστασης αποθηκεύεται στο ιστορικό της.
 
 ## Μηχανές
 
 Κάθε μηχανή έχει κωδικό, όνομα, λειτουργική περιοχή και κατάσταση.
 
-Η κατάσταση της μηχανής ενημερώνεται αυτόματα από τις ανοιχτές βλάβες της: αν υπάρχει ανοιχτή βλάβη σοβαρότητας `HIGH` ή `CRITICAL` η μηχανή περνά σε `DOWN`, αν υπάρχει οποιαδήποτε άλλη ανοιχτή βλάβη περνά σε `UNDER_MAINTENANCE`, και όταν δεν μένει καμία ανοιχτή επιστρέφει σε `OPERATIONAL`.
+Η κατάσταση της μηχανής ενημερώνεται αυτόματα από τις ανοιχτές βλάβες της: αν υπάρχει ανοιχτή βλάβη σοβαρότητας HIGH ή CRITICAL η μηχανή περνά σε DOWN, αν υπάρχει οποιαδήποτε άλλη ανοιχτή βλάβη περνά σε UNDER_MAINTENANCE, και όταν δεν μένει καμία ανοιχτή επιστρέφει σε OPERATIONAL.
 
 Από τη λίστα μηχανών ο χρήστης μπορεί να ανοίξει τη σελίδα μιας συγκεκριμένης μηχανής και να δει αναλυτικά τα στοιχεία της.
 
@@ -61,15 +57,13 @@ OPEN → IN_PROGRESS → RESOLVED → CLOSED
 
 Σε κάθε βλάβη καταγράφονται η μηχανή, ο τίτλος, η περιγραφή, η σοβαρότητα και η τρέχουσα κατάσταση.
 
-Τα επίπεδα σοβαρότητας είναι:
-
-`LOW`, `MEDIUM`, `HIGH`, `CRITICAL`
+Τα επίπεδα σοβαρότητας είναι LOW, MEDIUM, HIGH και CRITICAL.
 
 Η λίστα βλαβών υποστηρίζει φίλτρα, αναζήτηση και σελιδοποίηση, ώστε να μπορεί ο χρήστης να βρίσκει εύκολα συγκεκριμένες καταγραφές.
 
 ![Λίστα βλαβών](docs/screenshots/05-faults-list.png)
 
-Μια βλάβη μπορεί να ανατεθεί σε τεχνικό και να έχει μία ή περισσότερες ενέργειες συντήρησης. Σε κάθε ενέργεια μπορεί να καταγραφεί και χρόνος διακοπής. Η πρώτη ενέργεια που καταχωρείται σε μια βλάβη που είναι ακόμα `OPEN` την περνά αυτόματα σε `IN_PROGRESS`.
+Μια βλάβη μπορεί να ανατεθεί σε τεχνικό και να έχει μία ή περισσότερες ενέργειες συντήρησης. Σε κάθε ενέργεια μπορεί να καταγραφεί και χρόνος διακοπής. Η πρώτη ενέργεια που καταχωρείται σε μια βλάβη που είναι ακόμα OPEN την περνά αυτόματα σε IN_PROGRESS.
 
 Στην αναλυτική σελίδα της βλάβης εμφανίζονται επίσης ο υπεύθυνος τεχνικός, οι ενέργειες που έχουν γίνει και το ιστορικό των αλλαγών κατάστασης.
 
@@ -77,25 +71,21 @@ OPEN → IN_PROGRESS → RESOLVED → CLOSED
 
 ## Χρήστες και ρόλοι
 
-Η εφαρμογή χρησιμοποιεί τρεις ρόλους:
+Η εφαρμογή χρησιμοποιεί τρεις ρόλους: TECHNICIAN, SUPERVISOR και MANAGER.
 
-* `TECHNICIAN`
-* `SUPERVISOR`
-* `MANAGER`
+Ο TECHNICIAN μπορεί να εργάζεται πάνω στις βλάβες και να αναλαμβάνει μια διαθέσιμη βλάβη για τον εαυτό του.
 
-Ο `TECHNICIAN` μπορεί να εργάζεται πάνω στις βλάβες και να αναλαμβάνει μια διαθέσιμη βλάβη για τον εαυτό του.
+Ο SUPERVISOR έχει επιπλέον δικαιώματα, όπως δημιουργία και επεξεργασία μηχανών, ανάθεση βλαβών σε άλλους χρήστες, Excel import και διαχείριση χρηστών χαμηλότερου ρόλου.
 
-Ο `SUPERVISOR` έχει επιπλέον δικαιώματα, όπως δημιουργία και επεξεργασία μηχανών, ανάθεση βλαβών σε άλλους χρήστες, Excel import και διαχείριση χρηστών χαμηλότερου ρόλου.
+Ο MANAGER έχει τα περισσότερα δικαιώματα, μεταξύ άλλων διαγραφή μηχανών ή βλαβών και ευρύτερη διαχείριση χρηστών.
 
-Ο `MANAGER` έχει τα περισσότερα δικαιώματα, μεταξύ άλλων διαγραφή μηχανών ή βλαβών και ευρύτερη διαχείριση χρηστών.
+Ο κανόνας ιεραρχίας είναι ότι κάθε χρήστης μπορεί να δημιουργήσει ή να αναθέσει μόνο ρόλο χαμηλότερο από τον δικό του. Κανείς δεν μπορεί να δημιουργήσει άλλον MANAGER μέσω του API.
 
-Ο κανόνας ιεραρχίας είναι ότι κάθε χρήστης μπορεί να δημιουργήσει ή να αναθέσει μόνο ρόλο χαμηλότερο από τον δικό του. Κανείς δεν μπορεί να δημιουργήσει άλλον `MANAGER` μέσω του API.
-
-Η δημόσια εγγραφή δημιουργεί πάντα ανενεργό λογαριασμό `TECHNICIAN`. Ο λογαριασμός πρέπει να ενεργοποιηθεί πριν μπορέσει ο χρήστης να συνδεθεί.
+Η δημόσια εγγραφή δημιουργεί πάντα ανενεργό λογαριασμό TECHNICIAN. Ο λογαριασμός πρέπει να ενεργοποιηθεί πριν μπορέσει ο χρήστης να συνδεθεί.
 
 ## Excel import / export
 
-Η εφαρμογή υποστηρίζει εισαγωγή βλαβών από αρχεία `.xlsx`.
+Η εφαρμογή υποστηρίζει εισαγωγή βλαβών από αρχεία .xlsx.
 
 Μπορεί να αναγνωρίσει:
 
@@ -111,9 +101,9 @@ OPEN → IN_PROGRESS → RESOLVED → CLOSED
 
 Το template του MainTrack περιλαμβάνει προαιρετική στήλη ημερομηνίας, ώστε ιστορικά δεδομένα να διατηρούν την πραγματική τους ημερομηνία και να μην καταγράφονται όλα ως σημερινά.
 
-Υπάρχει επίσης export της λίστας βλαβών σε `.xlsx`, με βάση τα φίλτρα που έχει επιλέξει ο χρήστης.
+Υπάρχει επίσης export της λίστας βλαβών σε .xlsx, με βάση τα φίλτρα που έχει επιλέξει ο χρήστης.
 
-Στον φάκελο `samples/` υπάρχουν αρχεία επίδειξης για δοκιμή του import.
+Στον φάκελο samples υπάρχουν αρχεία επίδειξης για δοκιμή του import.
 
 ## Analytics
 
@@ -136,28 +126,15 @@ OPEN → IN_PROGRESS → RESOLVED → CLOSED
 
 Οι βασικοί υπολογισμοί που χρησιμοποιούνται είναι:
 
-```
-MTBF (ώρες) =
-(ημέρες περιόδου × 24) / πλήθος βλαβών
-```
-
-```
-MTTR (ώρες) =
-(συνολικά λεπτά διακοπής / 60)
-/
-πλήθος βλαβών με καταγεγραμμένο χρόνο διακοπής
-```
-
-```
-Availability (%) =
-100 × MTBF / (MTBF + MTTR)
-```
+* **MTBF** σε ώρες: (ημέρες περιόδου × 24) διά το πλήθος των βλαβών
+* **MTTR** σε ώρες: (συνολικά λεπτά διακοπής διά 60) διά το πλήθος των βλαβών με καταγεγραμμένο χρόνο διακοπής
+* **Availability** σε ποσοστό: 100 × MTBF διά (MTBF + MTTR)
 
 Στον MTTR μετρώνται μόνο οι βλάβες που έχουν καταγεγραμμένο χρόνο διακοπής. Οι υπόλοιπες θα τραβούσαν τον μέσο όρο προς τα κάτω και θα έδιναν εικόνα γρηγορότερων επισκευών από την πραγματική. Όταν δεν υπάρχουν αρκετά δεδομένα, οι δείκτες επιστρέφονται κενοί και όχι μηδενικοί.
 
 Τα φίλτρα εφαρμόζονται στην ημερομηνία της βλάβης και όχι της επισκευής, ώστε μια βλάβη του Δεκεμβρίου που επισκευάστηκε τον Ιανουάριο να μη μετρά σε λάθος μήνα.
 
-Το αρχείο `Maintrack-Pareto.pbix` αποτελεί συμπληρωματικό Power BI dashboard και δεν απαιτείται για τη λειτουργία της εφαρμογής.
+Το αρχείο Maintrack-Pareto.pbix αποτελεί συμπληρωματικό Power BI dashboard και δεν απαιτείται για τη λειτουργία της εφαρμογής.
 
 ## Τεχνολογίες
 
@@ -168,7 +145,7 @@ Availability (%) =
 * Spring Web
 * Spring Data JPA / Hibernate
 * Spring Security
-* JWT (`jjwt` 0.13.0)
+* JWT (jjwt 0.13.0)
 * Microsoft SQL Server JDBC
 * Apache POI 5.4.1
 * springdoc-openapi / Swagger
@@ -193,43 +170,24 @@ Availability (%) =
 * Node 20 στο Docker build του frontend
 * Java 21 / Temurin στο backend
 
-Στο backend η εφαρμογή είναι χωρισμένη σε `Controller`, `Service` και `Repository` layers. Τα δεδομένα που ανταλλάσσονται μέσω του API χρησιμοποιούν DTOs και τα JPA entities δεν εκτίθενται απευθείας.
+Στο backend η εφαρμογή είναι χωρισμένη σε Controller, Service και Repository layers. Τα δεδομένα που ανταλλάσσονται μέσω του API χρησιμοποιούν DTOs και τα JPA entities δεν εκτίθενται απευθείας.
 
 ## Δομή του repository
 
-```
-maintrack-app/
-├── backend/            Spring Boot εφαρμογή, Dockerfile, Maven wrapper
-│   └── src/
-│       ├── main/java/com/codingfactory/maintrack/
-│       │   ├── config/       DataSeeder, OpenApiConfig
-│       │   ├── controller/   REST endpoints
-│       │   ├── dto/          Request / Response objects
-│       │   ├── exception/    Κεντρικός χειρισμός σφαλμάτων
-│       │   ├── model/        JPA entities και enums
-│       │   ├── repository/   Spring Data JPA
-│       │   ├── security/     JWT, SecurityConfig
-│       │   └── service/      Επιχειρησιακή λογική
-│       └── test/             Unit tests
-├── frontend/           React + Vite, Dockerfile, nginx.conf
-│   └── src/
-│       ├── api/        Κλήσεις προς το backend
-│       ├── components/ Επαναχρησιμοποιήσιμα components
-│       ├── context/    Auth και Theme
-│       └── pages/      Σελίδες της εφαρμογής
-├── docker/             Script αρχικοποίησης της βάσης
-├── docs/screenshots/   Εικόνες του README
-├── postman/            Postman collection
-├── samples/            Αρχεία Excel για δοκιμή του import
-├── docker-compose.yml
-└── .env.example
-```
+* **backend/** — Spring Boot εφαρμογή, REST API, business logic και tests. Περιλαμβάνει επίσης το Dockerfile και τον Maven wrapper. Ο κώδικας είναι οργανωμένος σε config, controller, dto, exception, model, repository, security και service.
+* **frontend/** — React εφαρμογή με Vite, μαζί με το Dockerfile και τη διαμόρφωση του Nginx. Ο κώδικας χωρίζεται σε api, components, context και pages.
+* **docker/** — script αρχικοποίησης της βάσης δεδομένων.
+* **docs/screenshots/** — οι εικόνες που εμφανίζονται σε αυτό το README.
+* **postman/** — το Postman collection της εφαρμογής.
+* **samples/** — αρχεία Excel για δοκιμή του import.
+* **docker-compose.yml** — η διαμόρφωση του Docker Compose.
+* **.env.example** — παράδειγμα configuration.
 
 ## Build και Deployment
 
 Ο προτεινόμενος τρόπος εκτέλεσης της εφαρμογής είναι μέσω Docker Compose, ώστε να μην χρειάζεται ξεχωριστή εγκατάσταση SQL Server, Maven ή Node.js για την πλήρη εκτέλεση.
 
-Το μόνο που απαιτείται είναι εγκατεστημένο Docker Desktop ή Docker Engine με το plugin `compose`.
+Το μόνο που απαιτείται είναι εγκατεστημένο Docker Desktop ή Docker Engine με το plugin compose.
 
 ### 1. Clone του repository
 
@@ -238,9 +196,9 @@ git clone https://github.com/geokal1996/maintrack-app.git
 cd maintrack-app
 ```
 
-### 2. Δημιουργία του `.env`
+### 2. Δημιουργία του .env
 
-Το repository περιλαμβάνει αρχείο `.env.example`.
+Το repository περιλαμβάνει αρχείο .env.example.
 
 Σε Windows PowerShell:
 
@@ -254,9 +212,9 @@ Copy-Item .env.example .env
 cp .env.example .env
 ```
 
-Στο `.env` πρέπει να υπάρχει τιμή για το `JWT_SECRET`. Χωρίς αυτήν το Docker Compose σταματά με σχετικό μήνυμα. Οι υπόλοιπες μεταβλητές έχουν προεπιλεγμένες τιμές στο `docker-compose.yml`.
+Στο .env πρέπει να υπάρχει τιμή για το JWT_SECRET. Χωρίς αυτήν το Docker Compose σταματά με σχετικό μήνυμα. Οι υπόλοιπες μεταβλητές έχουν προεπιλεγμένες τιμές στο docker-compose.yml.
 
-Το πραγματικό `.env` βρίσκεται στο `.gitignore` και δεν ανεβαίνει στο repository.
+Το πραγματικό .env βρίσκεται στο .gitignore και δεν ανεβαίνει στο repository.
 
 ### 3. Build και εκκίνηση
 
@@ -266,26 +224,11 @@ cp .env.example .env
 docker compose up -d --build
 ```
 
-Με αυτή την εντολή ξεκινούν:
-
-* ο SQL Server,
-* το initialization της βάσης,
-* το Spring Boot backend,
-* το React frontend μέσω Nginx.
+Με αυτή την εντολή ξεκινούν ο SQL Server, το initialization της βάσης, το Spring Boot backend και το React frontend μέσω Nginx.
 
 Το πρώτο build χρειάζεται αρκετά λεπτά, καθώς κατεβαίνουν οι εικόνες και οι εξαρτήσεις.
 
-Η εφαρμογή είναι διαθέσιμη στο:
-
-```
-http://localhost:3000
-```
-
-Το backend είναι διαθέσιμο στο:
-
-```
-http://localhost:8080
-```
+Η εφαρμογή είναι διαθέσιμη στο http://localhost:3000 και το backend στο http://localhost:8080.
 
 ### 4. Τερματισμός
 
@@ -305,15 +248,15 @@ docker compose down -v
 
 Η ανάπτυξη του project έγινε σε Windows.
 
-Για τοπική εκτέλεση χωρίς Docker χρειάζονται JDK 21, Node.js και ένας SQL Server με βάση `maintrackdb`. Εναλλακτικά, μπορεί να χρησιμοποιηθεί μόνο η βάση από το Docker:
+Για τοπική εκτέλεση χωρίς Docker χρειάζονται JDK 21, Node.js και ένας SQL Server με βάση maintrackdb. Εναλλακτικά, μπορεί να χρησιμοποιηθεί μόνο η βάση από το Docker:
 
 ```
 docker compose up -d sqlserver db-init
 ```
 
-Πριν την εκκίνηση του backend πρέπει να οριστούν οι μεταβλητές περιβάλλοντος `DB_URL`, `DB_USERNAME`, `DB_PASSWORD` και `JWT_SECRET`, καθώς οι δύο τελευταίες δεν έχουν προεπιλεγμένη τιμή.
+Πριν την εκκίνηση του backend πρέπει να οριστούν οι μεταβλητές περιβάλλοντος DB_URL, DB_USERNAME, DB_PASSWORD και JWT_SECRET, καθώς οι δύο τελευταίες δεν έχουν προεπιλεγμένη τιμή.
 
-Το backend σε Docker και το τοπικό backend χρησιμοποιούν και τα δύο τη θύρα `8080` και δεν μπορούν να τρέχουν ταυτόχρονα.
+Το backend σε Docker και το τοπικό backend χρησιμοποιούν και τα δύο τη θύρα 8080 και δεν μπορούν να τρέχουν ταυτόχρονα.
 
 ### Backend
 
@@ -330,11 +273,7 @@ Tests:
 .\mvnw.cmd test
 ```
 
-Το jar παράγεται στον φάκελο:
-
-```
-backend/target/
-```
+Το jar παράγεται στον φάκελο backend/target.
 
 Σε Linux ή macOS οι αντίστοιχες εντολές είναι `./mvnw clean package` και `./mvnw test`.
 
@@ -346,11 +285,7 @@ npm.cmd install
 npm.cmd run build
 ```
 
-Τα production αρχεία δημιουργούνται στο:
-
-```
-frontend/dist/
-```
+Τα production αρχεία δημιουργούνται στο frontend/dist.
 
 Για development:
 
@@ -358,47 +293,21 @@ frontend/dist/
 npm.cmd run dev
 ```
 
-Το Vite dev server ανοίγει στο:
-
-```
-http://localhost:5173
-```
+Το Vite dev server ανοίγει στο http://localhost:5173.
 
 Σε Linux ή macOS χρησιμοποιείται `npm` αντί για `npm.cmd`.
 
 ## Demo λογαριασμοί
 
-Για γρήγορη δοκιμή της εφαρμογής υπάρχουν οι παρακάτω demo χρήστες.
+Για γρήγορη δοκιμή της εφαρμογής υπάρχουν οι παρακάτω demo χρήστες:
 
-**Manager**
+* **Manager** — admin / Admin123!
+* **Supervisor** — m.nikolaou / Manager123!
+* **Technician** — k.konstantinou / Tech123!
+* **Technician** — d.georgiou / Tech123!
+* **Technician** — n.theodorou / Tech123!
 
-```
-Username: admin
-Password: Admin123!
-```
-
-**Supervisor**
-
-```
-Username: m.nikolaou
-Password: Manager123!
-```
-
-**Technician**
-
-```
-Username: k.konstantinou
-Password: Tech123!
-```
-
-Υπάρχουν επίσης οι demo technicians:
-
-```
-d.georgiou / Tech123!
-n.theodorou / Tech123!
-```
-
-Οι χρήστες δημιουργούνται αυτόματα από τον `DataSeeder` σε άδεια βάση. Ο λογαριασμός `admin` δημιουργείται μόνο όταν η βάση δεν έχει κανέναν χρήστη.
+Οι χρήστες δημιουργούνται αυτόματα από τον DataSeeder σε άδεια βάση. Ο λογαριασμός admin δημιουργείται μόνο όταν η βάση δεν έχει κανέναν χρήστη.
 
 Μαζί με τους χρήστες δημιουργούνται έξι μηχανές και δεκατέσσερις βλάβες, κατανεμημένες σε διάστημα περίπου οκτώ μηνών, ώστε τα φίλτρα περιόδου και οι αναλύσεις να έχουν πραγματικά δεδομένα να δείξουν.
 
@@ -406,50 +315,19 @@ n.theodorou / Tech123!
 
 Το REST API τεκμηριώνεται με Swagger / OpenAPI.
 
-Με Docker το Swagger UI είναι διαθέσιμο στο:
+Με Docker το Swagger UI είναι διαθέσιμο στο http://localhost:3000/swagger-ui.html και απευθείας από το backend στο http://localhost:8080/swagger-ui.html. Το OpenAPI JSON βρίσκεται στο http://localhost:8080/v3/api-docs.
 
-```
-http://localhost:3000/swagger-ui.html
-```
-
-και απευθείας από το backend στο:
-
-```
-http://localhost:8080/swagger-ui.html
-```
-
-Το OpenAPI JSON βρίσκεται στο:
-
-```
-http://localhost:8080/v3/api-docs
-```
-
-Το Swagger και το `GET /api/health` είναι δημόσια και δεν απαιτούν σύνδεση. Για τα υπόλοιπα endpoints γίνεται πρώτα login μέσω `POST /api/auth/login`. Στη συνέχεια το JWT token μπορεί να δοθεί από το κουμπί Authorize του Swagger.
+Το Swagger και το GET /api/health είναι δημόσια και δεν απαιτούν σύνδεση. Για τα υπόλοιπα endpoints γίνεται πρώτα login μέσω POST /api/auth/login. Στη συνέχεια το JWT token μπορεί να δοθεί από το κουμπί Authorize του Swagger.
 
 ![Swagger UI](docs/screenshots/09-swagger.png)
 
-Τα βασικά API groups είναι:
-
-* Authentication
-* Machines
-* Faults
-* Maintenance Actions
-* Fault Import / Export
-* Statistics
-* Users
-* Health
+Τα βασικά API groups είναι Authentication, Machines, Faults, Maintenance Actions, Fault Import / Export, Statistics, Users και Health.
 
 ## Tests
 
 Το backend περιλαμβάνει unit tests με JUnit 5, Mockito και AssertJ.
 
-Το τελευταίο test run ολοκληρώθηκε με:
-
-```
-42 tests
-0 failures
-0 errors
-```
+Το τελευταίο test run ολοκληρώθηκε με 42 tests, 0 failures και 0 errors.
 
 Τα tests καλύπτουν μεταξύ άλλων:
 
@@ -469,42 +347,25 @@ http://localhost:8080/v3/api-docs
 
 ## Postman
 
-Στο repository υπάρχει Postman collection:
+Στο repository υπάρχει Postman collection, στο postman/Maintrack.postman_collection.json.
 
-```
-postman/Maintrack.postman_collection.json
-```
-
-Περιλαμβάνει 39 requests για τα βασικά endpoints της εφαρμογής, αλλά και αρνητικά σενάρια για έλεγχο των HTTP status `401`, `403`, `404` και `409`.
+Περιλαμβάνει 39 requests για τα βασικά endpoints της εφαρμογής, αλλά και αρνητικά σενάρια για έλεγχο των HTTP status 401, 403, 404 και 409.
 
 Για χρήση:
 
 1. γίνεται import το collection στο Postman,
-2. εκτελείται πρώτα η ομάδα `Auth`,
+2. εκτελείται πρώτα η ομάδα Auth,
 3. τα scripts αποθηκεύουν αυτόματα τα tokens και τα IDs που χρειάζονται τα επόμενα requests.
 
 ## Configuration
 
-Οι βασικές μεταβλητές περιβάλλοντος του backend είναι:
+Οι βασικές μεταβλητές περιβάλλοντος του backend είναι DB_URL, DB_USERNAME, DB_PASSWORD και JWT_SECRET.
 
-```
-DB_URL
-DB_USERNAME
-DB_PASSWORD
-JWT_SECRET
-```
+Τα DB_URL και DB_USERNAME έχουν προεπιλεγμένες τιμές για τοπικό SQL Server. Τα DB_PASSWORD και JWT_SECRET δεν έχουν και πρέπει να δοθούν.
 
-Τα `DB_URL` και `DB_USERNAME` έχουν προεπιλεγμένες τιμές για τοπικό SQL Server. Τα `DB_PASSWORD` και `JWT_SECRET` δεν έχουν και πρέπει να δοθούν.
+Για το Docker Compose χρησιμοποιούνται επίσης τα στοιχεία σύνδεσης του SQL Server μέσα από το .env.
 
-Για το Docker Compose χρησιμοποιούνται επίσης τα στοιχεία σύνδεσης του SQL Server μέσα από το `.env`.
-
-Στο frontend χρησιμοποιείται:
-
-```
-VITE_API_BASE_URL
-```
-
-Στο Docker build παίρνει τιμή `/`, επειδή το Nginx λειτουργεί ως reverse proxy για το backend.
+Στο frontend χρησιμοποιείται η μεταβλητή VITE_API_BASE_URL. Στο Docker build παίρνει τιμή `/`, επειδή το Nginx λειτουργεί ως reverse proxy για το backend.
 
 ## Security και χειρισμός σφαλμάτων
 
@@ -514,15 +375,7 @@ VITE_API_BASE_URL
 
 Ο ρόλος κατά την εγγραφή ορίζεται από τον server και δεν μπορεί να δηλωθεί από το αίτημα.
 
-Η εφαρμογή χρησιμοποιεί validation στα DTOs και επιστρέφει ανά περίπτωση HTTP status όπως:
-
-```
-400 Bad Request
-401 Unauthorized
-403 Forbidden
-404 Not Found
-409 Conflict
-```
+Η εφαρμογή χρησιμοποιεί validation στα DTOs και επιστρέφει ανά περίπτωση HTTP status όπως 400 Bad Request, 401 Unauthorized, 403 Forbidden, 404 Not Found και 409 Conflict.
 
 Το μήνυμα σε αποτυχημένη σύνδεση είναι σκόπιμα γενικό, ώστε να μην αποκαλύπτεται ποια usernames υπάρχουν.
 
@@ -539,7 +392,7 @@ VITE_API_BASE_URL
 * δεν υπάρχει διαδικασία ανάκτησης ξεχασμένου κωδικού,
 * δεν υπάρχει server-side token revocation, οπότε μετά την αποσύνδεση το token παραμένει τεχνικά έγκυρο μέχρι να λήξει,
 * δεν υπάρχει περιορισμός στις προσπάθειες σύνδεσης,
-* το database schema ενημερώνεται με Hibernate `ddl-auto=update` και όχι με migrations,
+* το database schema ενημερώνεται με Hibernate ddl-auto=update και όχι με migrations,
 * τα automated tests καλύπτουν κυρίως το backend service layer και δεν υπάρχουν automated frontend tests.
 
 ## Συγγραφέας
@@ -549,5 +402,4 @@ VITE_API_BASE_URL
 Τελική εργασία — Coding Factory 10
 Οικονομικό Πανεπιστήμιο Αθηνών
 
-Repository:
-https://github.com/geokal1996/maintrack-app
+Repository: https://github.com/geokal1996/maintrack-app
