@@ -81,90 +81,90 @@ public class DataSeeder implements CommandLineRunner {
                 "Θόρυβος και δόνηση σε ρουλεμάν κυλίνδρου",
                 "Έντονος θόρυβος και δόνηση κατά τη λειτουργία του κυλίνδρου έλασης. Χρειάζεται άμεσος έλεγχος.",
                 FaultSeverity.CRITICAL, FaultStatus.OPEN,
-                null, null, null);
+                null, null, null, 3);
 
         seedFaultIfMissing(crl1, mechanic,
                 "Διαρροή λαδιού από υδραυλική μονάδα",
                 "Παρατηρήθηκε διαρροή λαδιού στη βάση της υδραυλικής μονάδας του κυλίνδρου.",
                 FaultSeverity.MEDIUM, FaultStatus.CLOSED,
-                mechanic, "Αντικατάσταση τσιμούχας και συμπλήρωση λαδιού υδραυλικού συστήματος.", 45);
+                mechanic, "Αντικατάσταση τσιμούχας και συμπλήρωση λαδιού υδραυλικού συστήματος.", 45, 38);
 
         seedFaultIfMissing(crl1, mechanic,
                 "Φθορά τσιμούχας κυλίνδρου με διαρροή",
                 "Μικρή διαρροή λαδιού λόγω φθαρμένης τσιμούχας κυλίνδρου.",
                 FaultSeverity.LOW, FaultStatus.CLOSED,
-                mechanic, "Αντικατάσταση τσιμούχας κυλίνδρου.", 35);
+                mechanic, "Αντικατάσταση τσιμούχας κυλίνδρου.", 35, 96);
 
         seedFaultIfMissing(crl1, automation,
                 "Σφάλμα encoder ταχύτητας κυλίνδρου",
                 "Ασταθής ένδειξη ταχύτητας κυλίνδρου στο σύστημα ελέγχου.",
                 FaultSeverity.MEDIUM, FaultStatus.CLOSED,
-                automation, "Επανασυγχρονισμός encoder και έλεγχος καλωδίωσης.", 20);
+                automation, "Επανασυγχρονισμός encoder και έλεγχος καλωδίωσης.", 20, 172);
 
         // ---- SAW1: Πριόνι Κοπής Ράβδων 1 ----
         seedFaultIfMissing(saw1, mechanic,
                 "Φθορά λάμας κοπής",
                 "Η λάμα κοπής παρουσιάζει εμφανή φθορά και ανομοιόμορφη κοπή.",
                 FaultSeverity.LOW, FaultStatus.CLOSED,
-                mechanic, "Αντικατάσταση λάμας κοπής και έλεγχος ευθυγράμμισης.", 20);
+                mechanic, "Αντικατάσταση λάμας κοπής και έλεγχος ευθυγράμμισης.", 20, 61);
 
         seedFaultIfMissing(saw1, automation,
                 "Δυσλειτουργία αισθητήρα θέσης",
                 "Ο αισθητήρας θέσης δίνει ασταθή σήματα, επηρεάζοντας την ακρίβεια κοπής.",
                 FaultSeverity.MEDIUM, FaultStatus.RESOLVED,
-                automation, "Καθαρισμός και επανευθυγράμμιση επαγωγικού αισθητήρα θέσης.", 15);
+                automation, "Καθαρισμός και επανευθυγράμμιση επαγωγικού αισθητήρα θέσης.", 15, 12);
 
         // ---- FUR2: Φούρνος Ανόπτησης 2 ----
         seedFaultIfMissing(fur2, electrician,
                 "Απόκλιση θερμοκρασίας φούρνου εκτός ορίων",
                 "Η θερμοκρασία του φούρνου αποκλίνει από τη ρυθμισμένη τιμή κατά τη λειτουργία.",
                 FaultSeverity.HIGH, FaultStatus.IN_PROGRESS,
-                automation, "Έλεγχος θερμοστοιχείου και καλωδίωσης· σε εξέλιξη έλεγχος προγράμματος PLC.", null);
+                automation, "Έλεγχος θερμοστοιχείου και καλωδίωσης· σε εξέλιξη έλεγχος προγράμματος PLC.", null, 6);
 
         seedFaultIfMissing(fur2, mechanic,
                 "Βλάβη σε ανεμιστήρα ψύξης",
                 "Ο ανεμιστήρας ψύξης του φούρνου σταμάτησε να λειτουργεί.",
                 FaultSeverity.MEDIUM, FaultStatus.CLOSED,
-                mechanic, "Αντικατάσταση ανεμιστήρα ψύξης.", 60);
+                mechanic, "Αντικατάσταση ανεμιστήρα ψύξης.", 60, 128);
 
         // ---- PKG3: Γραμμή Συσκευασίας 3 ----
         seedFaultIfMissing(pkg3, automation,
                 "Μπλοκάρισμα ιμάντα μεταφοράς",
                 "Ο ιμάντας μεταφοράς μπλοκάρει κατά διαστήματα λόγω συσσώρευσης υλικού.",
                 FaultSeverity.LOW, FaultStatus.CLOSED,
-                mechanic, "Απεμπλοκή ιμάντα και καθαρισμός τροχαλιών.", 10);
+                mechanic, "Απεμπλοκή ιμάντα και καθαρισμός τροχαλιών.", 10, 84);
 
         seedFaultIfMissing(pkg3, automation,
                 "Δυσλειτουργία φωτοκύτταρου ανίχνευσης προϊόντος",
                 "Το φωτοκύτταρο δεν ανιχνεύει σταθερά τα προϊόντα στη γραμμή.",
                 FaultSeverity.LOW, FaultStatus.RESOLVED,
-                automation, "Αντικατάσταση φωτοκύτταρου ανίχνευσης.", 15);
+                automation, "Αντικατάσταση φωτοκύτταρου ανίχνευσης.", 15, 25);
 
         // ---- CMP2: Συμπιεστής Αέρα 2 ----
         seedFaultIfMissing(cmp2, electrician,
                 "Πτώση πίεσης δικτύου πεπιεσμένου αέρα",
                 "Παρατηρήθηκε αισθητή πτώση πίεσης στο δίκτυο πεπιεσμένου αέρα.",
                 FaultSeverity.HIGH, FaultStatus.CLOSED,
-                mechanic, "Εντοπισμός και αποκατάσταση διαρροής σε σύνδεσμο σωλήνωσης.", 30);
+                mechanic, "Εντοπισμός και αποκατάσταση διαρροής σε σύνδεσμο σωλήνωσης.", 30, 145);
 
         seedFaultIfMissing(cmp2, electrician,
                 "Υπερθέρμανση κινητήρα συμπιεστή",
                 "Ο κινητήρας του συμπιεστή παρουσιάζει αυξημένη θερμοκρασία λειτουργίας.",
                 FaultSeverity.MEDIUM, FaultStatus.CLOSED,
-                electrician, "Καθαρισμός ψυγείου και έλεγχος ανεμιστήρα ψύξης κινητήρα.", 40);
+                electrician, "Καθαρισμός ψυγείου και έλεγχος ανεμιστήρα ψύξης κινητήρα.", 40, 208);
 
         // ---- ELP1: Ηλεκτρικός Πίνακας Γενικής Διανομής 1 ----
         seedFaultIfMissing(elp1, electrician,
                 "Ενεργοποίηση θερμικού προστασίας χωρίς εμφανή αιτία",
                 "Το θερμικό προστασίας ενεργοποιήθηκε χωρίς εμφανή υπερφόρτωση της γραμμής.",
                 FaultSeverity.MEDIUM, FaultStatus.CLOSED,
-                electrician, "Έλεγχος φορτίου γραμμής και επαναφορά θερμικού· δεν διαπιστώθηκε βλάβη.", 5);
+                electrician, "Έλεγχος φορτίου γραμμής και επαναφορά θερμικού· δεν διαπιστώθηκε βλάβη.", 5, 190);
 
         seedFaultIfMissing(elp1, electrician,
                 "Χαλαρή σύνδεση σε ακροδέκτη γραμμής τροφοδοσίας",
                 "Εντοπίστηκε χαλαρή σύνδεση σε ακροδέκτη κατά τον περιοδικό έλεγχο του πίνακα.",
                 FaultSeverity.HIGH, FaultStatus.RESOLVED,
-                electrician, "Σύσφιξη ακροδεκτών και θερμογράφηση πίνακα για επιβεβαίωση.", 25);
+                electrician, "Σύσφιξη ακροδεκτών και θερμογράφηση πίνακα για επιβεβαίωση.", 25, 52);
 
         // Afou dimiourgithikan oles oi vlaves, ipologizoume tin swsti katastasi tis kathe mihanis
         // me ton IDIO kanona pou xrisimopoiei to FaultService: DOWN an yparxei anoixti sovari vlavi,
@@ -244,14 +244,30 @@ public class DataSeeder implements CommandLineRunner {
         });
     }
 
+    // To "daysAgo" leei POSES MERES PRIN symvike i vlavi.
+    //
+    // Giati den ftiaxnoume oles tis vlaves me imerominia "simera": tote to diagramma
+    // tasis tha eixe MIA mono mpara kai ta filtra periodou sto Pareto den tha edeixnan
+    // kammia diafora. Trelis leitourgies tis efarmogis tha fainontan "nekres", eno
+    // douleuoun mia xara - apla den tha yparxan dedomena gia na to deixoun.
     private void seedFaultIfMissing(Machine machine, User reportedBy, String title, String description,
                                      FaultSeverity severity, FaultStatus finalStatus,
-                                     User technician, String actionDescription, Integer downtimeMinutes) {
+                                     User technician, String actionDescription, Integer downtimeMinutes,
+                                     int daysAgo) {
         boolean alreadyExists = faultRepository.findByMachineId(machine.getId()).stream()
                 .anyMatch(f -> f.getTitle().equals(title));
         if (alreadyExists) {
             return;
         }
+
+        // Diaforetiki ora gia kathe vlavi, mesa se ergasimo orario (07:00 - 16:00),
+        // oste na min fainontai oles grammenes to idio defterolepto.
+        LocalDateTime occurredAt = LocalDateTime.now()
+                .minusDays(daysAgo)
+                .withHour(7 + (daysAgo % 10))
+                .withMinute((daysAgo * 7) % 60)
+                .withSecond(0)
+                .withNano(0);
 
         Fault fault = new Fault();
         fault.setMachine(machine);
@@ -259,13 +275,19 @@ public class DataSeeder implements CommandLineRunner {
         fault.setTitle(title);
         fault.setDescription(description);
         fault.setSeverity(severity);
+        // PROSOXI: to @PrePersist tou Fault bazei "tora" MONO an to createdAt einai null -
+        // afou to orizoume edo, i vlavi kratae tin imerominia pou theloume.
+        fault.setCreatedAt(occurredAt);
         // PROSOXI: to @PrePersist tou Fault bazei OPEN MONO an to status einai null -
         // afou to orizoume edo riti, tha meinei o telikos status pou theloume.
         fault.setStatus(finalStatus);
         // O texnikos pou ekane ti douleia einai kai o ypeuthinos tis vlavis
         fault.setAssignedTo(technician);
         if (finalStatus == FaultStatus.RESOLVED || finalStatus == FaultStatus.CLOSED) {
-            fault.setResolvedAt(LocalDateTime.now());
+            // I episkevi teleionei meta apo tin ora diakopis syn ligi ora gia
+            // dokimes kai epanekkinisi - oxi tin idia stigmi me ti vlavi.
+            int repairMinutes = (downtimeMinutes != null ? downtimeMinutes : 60) + 45;
+            fault.setResolvedAt(occurredAt.plusMinutes(repairMinutes));
         }
         Fault savedFault = faultRepository.save(fault);
 
@@ -275,6 +297,8 @@ public class DataSeeder implements CommandLineRunner {
             action.setTechnician(technician);
             action.setDescription(actionDescription);
             action.setDowntimeMinutes(downtimeMinutes);
+            // I energeia egine tin imera tis vlavis, oxi simera
+            action.setActionDate(occurredAt.plusMinutes(30));
             maintenanceActionRepository.save(action);
         }
 
