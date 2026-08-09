@@ -1,0 +1,11 @@
+node_modules/
+dist/
+.env
+.env.local
+*.log
+
+# Pragmatika arxeia dedomenon den mpainoun POTE mesa stin eikona
+*.xlsx
+*.xls
+*.xlsm
+*.csv

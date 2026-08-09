@@ -1,0 +1,17 @@
+# Ti DEN stelnoume sto Docker otan xtizoume tin eikona.
+#
+# Ektos apo taxytita, exei kai simasia asfaleias: oti den yparxei edo, den mporei
+# na katalixei mesa stin eikona kata lathos.
+target/
+.idea/
+*.iml
+.vscode/
+*.log
+
+# Pragmatika arxeia dedomenon den mpainoun POTE mesa stin eikona
+*.xlsx
+*.xls
+*.xlsm
+*.csv
+
+.env

@@ -1,16 +1,20 @@
-# Auto to arxeio "perigrafei" ena SQL Server pou trexei mesa se Docker container,
-# etoimo gia to Maintrack backend. Xrisimopoieitai SAN ENALLAKTIKI sto na exeis
-# egkatestimeno SQL Server Express topika - xrisimo an kapoios allos (p.x. o kathigitis)
-# thelei na trexei tin efarmogi xoris na egkatastisei tipota sto systima tou.
+# Sikonei OLOKLIRI tin efarmogi Maintrack me MIA entoli: vasi + backend + frontend.
 #
-# PROSOXI: auto DEN antikathista to topiko SQL Server Express pou xrisimopoieis
-# gia tin kathimerini anaptixi (development) - einai mono gia oso theli kapoios
-# na doulepsei/parousiasei tin efarmogi me Docker.
+# Skopos: opoiosdipote (p.x. o kathigitis) na mporei na trexei tin efarmogi XORIS
+# na egkatastisei Java, Node, Maven i SQL Server sto mihanima tou. Mono Docker.
 #
 # Xrisi:
-#   docker compose up -d        (xekinaei ti vasi se container, sto parasekinio)
-#   docker compose down         (tin stamataei)
-#   docker compose down -v      (tin stamataei KAI diagrafei ta dedomena tis)
+#   1) Antigrapse to .env.example se .env kai simplirose tis times
+#   2) docker compose up -d --build      (xtizei kai xekinaei ta panta)
+#   3) Anoikse http://localhost:3000
+#
+#   docker compose logs -f backend       (vlepeis ti kanei to backend)
+#   docker compose down                  (stamataei ta panta)
+#   docker compose down -v               (stamataei KAI svinei ta dedomena tis vasis)
+#
+# Simeiosi gia tin anaptyxi (development): otan doulevoume topika, DEN xreiazetai
+# olo auto. Arkei "docker compose up -d sqlserver db-init" gia ti vasi, kai to
+# backend/frontend trexoun apo to IDE kai to npm run dev.
 
 services:
   sqlserver:
@@ -34,8 +38,8 @@ services:
       retries: 15
       start_period: 20s
 
-  # Voithitiko container pou trexei MIA fora, dimiourgei ti vasi "maintrackdb" an leipei,
-  # kai meta stamataei mono tou (den menei na trexei sinexeia san to sqlserver).
+  # Voithitiko container pou trexei MIA fora: dimiourgei ti vasi "maintrackdb" kai
+  # ton xristi efarmogis, kai meta stamataei mono tou.
   db-init:
     image: mcr.microsoft.com/mssql/server:2022-latest
     container_name: maintrack-db-init
@@ -44,9 +48,44 @@ services:
         condition: service_healthy
     environment:
       SA_PASSWORD: ${SA_PASSWORD:-YourStrong!Passw0rd}
+      APP_DB_USERNAME: ${DB_USERNAME:-maintrack_app}
+      APP_DB_PASSWORD: ${DB_PASSWORD:-Maintrack!App2026}
     volumes:
       - ./docker/init-db.sh:/init-db.sh:ro
     entrypoint: ["bash", "/init-db.sh"]
+
+  backend:
+    build:
+      context: ./backend
+    container_name: maintrack-backend
+    # Perimenei na TELEIOSEI to db-init (oxi apla na "xekinisei"), alliws to
+    # Hibernate tha prospathouse na syndethei se vasi pou den yparxei akoma.
+    depends_on:
+      db-init:
+        condition: service_completed_successfully
+    environment:
+      # "sqlserver" einai to onoma tis ypiresias parapano - to Docker to metafrazei
+      # se dieuthinsi diktyou. DEN vazoume "localhost": mesa sto container tou backend,
+      # to localhost einai to IDIO to container, oxi i vasi.
+      DB_URL: jdbc:sqlserver://sqlserver:1433;databaseName=maintrackdb;encrypt=true;trustServerCertificate=true
+      DB_USERNAME: ${DB_USERNAME:-maintrack_app}
+      DB_PASSWORD: ${DB_PASSWORD:-Maintrack!App2026}
+      # To ":?" simainei "an leipei, stamata me auto to minima" - kalytero apo to
+      # na xekinisei i efarmogi me keno kleidi kai na skasei argotera me akatanoito lathos.
+      JWT_SECRET: ${JWT_SECRET:?Prepei na oristei to JWT_SECRET sto arxeio .env}
+    ports:
+      - "8080:8080"
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: maintrack-frontend
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      # 3000 sto mihanima sou -> 80 mesa sto container (nginx)
+      - "3000:80"
 
 volumes:
   maintrack_sqlserver_data:

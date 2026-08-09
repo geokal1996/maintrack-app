@@ -20,7 +20,10 @@ public class OpenApiConfig {
         return new OpenAPI()
                 .info(new Info()
                         .title("Maintrack API")
-                        .description("Sistima katagrafis vlavon kai syntirisis - Coding Factory Final Project")
+                        .description("Σύστημα καταγραφής βλαβών και συντήρησης εξοπλισμού. "
+                                + "Τελική εργασία Coding Factory 10 — Οικονομικό Πανεπιστήμιο Αθηνών. "
+                                + "Για τα endpoints που απαιτούν σύνδεση: κάντε login στο /api/auth/login, "
+                                + "αντιγράψτε το token και πατήστε «Authorize» πάνω δεξιά.")
                         .version("v1"))
                 .addSecurityItem(new SecurityRequirement().addList(SECURITY_SCHEME_NAME))
                 .components(new Components()
