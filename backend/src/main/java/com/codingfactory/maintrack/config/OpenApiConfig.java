@@ -21,7 +21,7 @@ public class OpenApiConfig {
                 .info(new Info()
                         .title("Maintrack API")
                         .description("Σύστημα καταγραφής βλαβών και συντήρησης εξοπλισμού. "
-                                + "Τελική εργασία Coding Factory 10 — Οικονομικό Πανεπιστήμιο Αθηνών. "
+                                + "Τελική εργασία Coding Factory 9 — Οικονομικό Πανεπιστήμιο Αθηνών. "
                                 + "Για τα endpoints που απαιτούν σύνδεση: κάντε login στο /api/auth/login, "
                                 + "αντιγράψτε το token και πατήστε «Authorize» πάνω δεξιά.")
                         .version("v1"))
